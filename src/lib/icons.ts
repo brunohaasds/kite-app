@@ -25,6 +25,7 @@ export {
 
   // Actions
   Plus,
+  Pencil,
   Trash2,
   Copy,
   Check,
@@ -32,6 +33,14 @@ export {
   MessageCircle,
   Search,
   ExternalLink,
+  ArrowRight,
+  Upload,
+  Camera,
+  ChevronLeft,
+
+  // Auth
+  LogIn,
+  UserPlus,
 
   // Social
   Globe,

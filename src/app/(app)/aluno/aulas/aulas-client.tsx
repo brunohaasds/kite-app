@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, MapPin, User, MessageCircle } from "@/lib/icons";
+import { Calendar, MapPin, User, MessageCircle } from "@/lib/icons";
 import { whatsappLink } from "@/lib/utils";
 import type { StatusKey } from "@/lib/styles/status-colors";
 
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export function AulasClient({ upcoming, past, cancelled }: Props) {
+  const router = useRouter();
   const [contactSession, setContactSession] = useState<SessionData | null>(null);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "cancelled">("upcoming");
 
@@ -62,7 +64,7 @@ export function AulasClient({ upcoming, past, cancelled }: Props) {
       });
       if (!res.ok) throw new Error();
       toast.success("Aula cancelada.");
-      window.location.reload();
+      router.refresh();
     } catch {
       toast.error("Erro ao cancelar aula.");
     }
@@ -70,7 +72,10 @@ export function AulasClient({ upcoming, past, cancelled }: Props) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Minhas Aulas</h1>
+      <div className="rounded-b-3xl bg-primary p-6 text-primary-foreground shadow-lg -mx-4 -mt-4 mb-6">
+        <h1 className="mb-1 text-2xl font-bold">Minhas Aulas</h1>
+        <p className="text-sm opacity-90">{upcoming.length} aula{upcoming.length !== 1 && "s"} próxima{upcoming.length !== 1 && "s"}</p>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2">

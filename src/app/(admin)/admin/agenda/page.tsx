@@ -2,28 +2,55 @@ import { requireAdmin } from "@/lib/rbac/require-permission";
 import { prisma } from "@/lib/db";
 import { AgendaClient } from "./agenda-client";
 
-export default async function AgendaPage() {
+interface Props {
+  searchParams: Promise<{ date?: string }>;
+}
+
+export default async function AgendaPage({ searchParams }: Props) {
   const session = await requireAdmin();
   const orgId = session.user.organizationId!;
+  const params = await searchParams;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const selectedDate = params.date
+    ? new Date(params.date + "T12:00:00")
+    : new Date();
+  selectedDate.setHours(0, 0, 0, 0);
 
-  const sessions = await prisma.sessions.findMany({
-    where: {
-      organization_id: orgId,
-      date: { gte: today, lt: tomorrow },
-      deleted_at: null,
-    },
-    include: {
-      student: { include: { user: { select: { name: true, phone: true } } } },
-      instructor: { include: { user: { select: { name: true } } } },
-      spot: { select: { name: true } },
-    },
-    orderBy: { start_time: "asc" },
-  });
+  const nextDay = new Date(selectedDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const [sessions, agendas] = await Promise.all([
+    prisma.sessions.findMany({
+      where: {
+        organization_id: orgId,
+        date: { gte: selectedDate, lt: nextDay },
+        deleted_at: null,
+      },
+      include: {
+        student: { include: { user: { select: { name: true, phone: true } } } },
+        instructor: { include: { user: { select: { name: true } } } },
+        spot: { select: { name: true } },
+      },
+      orderBy: { start_time: "asc" },
+    }),
+    prisma.agendas.findMany({
+      where: {
+        organization_id: orgId,
+        date: { gte: selectedDate, lt: nextDay },
+        deleted_at: null,
+      },
+      include: {
+        slots: {
+          where: { deleted_at: null },
+          include: {
+            instructor: { include: { user: { select: { name: true } } } },
+            spot: { select: { name: true } },
+          },
+          orderBy: { time: "asc" },
+        },
+      },
+    }),
+  ]);
 
   const serialized = sessions.map((s) => ({
     uuid: s.uuid,
@@ -39,5 +66,17 @@ export default async function AgendaPage() {
     spotName: s.spot?.name ?? "—",
   }));
 
-  return <AgendaClient sessions={serialized} />;
+  const availableSlots = agendas.flatMap((a) =>
+    a.slots.map((s) => ({
+      id: s.id,
+      time: s.time,
+      booked: s.booked,
+      instructorName: s.instructor?.user.name ?? "A definir",
+      spotName: s.spot?.name ?? null,
+    })),
+  );
+
+  const dateStr = selectedDate.toISOString().split("T")[0];
+
+  return <AgendaClient sessions={serialized} currentDate={dateStr} availableSlots={availableSlots} />;
 }

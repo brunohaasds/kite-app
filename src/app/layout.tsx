@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { Inter, Outfit } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: "Kite App — Gestão de Escolas de Kitesurf",
@@ -15,13 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased">
+      <body
+        className={`${inter.variable} ${outfit.variable} font-sans antialiased`}
+      >
         {children}
         <Toaster richColors position="top-center" />
       </body>

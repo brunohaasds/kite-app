@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
+  Home,
   Calendar,
   Plus,
   Users,
   Package,
   DollarSign,
+  Mail,
+  MapPin,
+  Award,
+  Settings,
   Menu,
   X,
   LogOut,
@@ -20,15 +25,30 @@ import { ADMIN_NAV_ITEMS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 
 const iconMap: Record<string, React.ElementType> = {
+  Home,
   Calendar,
   Plus,
   Users,
   Package,
   DollarSign,
+  Mail,
+  MapPin,
+  Award,
+  Settings,
 };
 
-function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
+type NavItem = { href: string; label: string; icon: string };
+
+function NavContent({
+  onLinkClick,
+  extraItems,
+}: {
+  onLinkClick?: () => void;
+  extraItems: NavItem[];
+}) {
   const pathname = usePathname();
+
+  const items = [...ADMIN_NAV_ITEMS, ...extraItems];
 
   return (
     <div className="flex h-full flex-col">
@@ -40,12 +60,14 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-1 p-2">
-        {ADMIN_NAV_ITEMS.map((item) => {
-          const Icon = iconMap[item.icon];
+        {items.map((item) => {
+          const Icon = iconMap[item.icon] ?? MapPin;
           const isActive =
-            item.href === "/admin/agenda"
-              ? pathname === "/admin/agenda"
-              : pathname.startsWith(item.href);
+            item.href === "/admin"
+              ? pathname === "/admin"
+              : item.href === "/admin/agenda"
+                ? pathname === "/admin/agenda"
+                : pathname.startsWith(item.href);
 
           return (
             <Link
@@ -81,10 +103,23 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
 
 export function AdminSidebar() {
   const [open, setOpen] = useState(false);
+  const [extraItems, setExtraItems] = useState<NavItem[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/spots/has-owned")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.hasOwnedSpot) {
+          setExtraItems([
+            { href: "/admin/meu-spot", label: "Meu Spot", icon: "MapPin" },
+          ]);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <>
-      {/* Mobile hamburger */}
       <Button
         variant="ghost"
         size="icon"
@@ -94,7 +129,6 @@ export function AdminSidebar() {
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -102,7 +136,6 @@ export function AdminSidebar() {
         />
       )}
 
-      {/* Mobile drawer */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 bg-card shadow-lg transition-transform lg:hidden",
@@ -117,12 +150,14 @@ export function AdminSidebar() {
         >
           <X className="h-5 w-5" />
         </Button>
-        <NavContent onLinkClick={() => setOpen(false)} />
+        <NavContent
+          onLinkClick={() => setOpen(false)}
+          extraItems={extraItems}
+        />
       </aside>
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:w-64 lg:border-r lg:bg-card">
-        <NavContent />
+        <NavContent extraItems={extraItems} />
       </aside>
     </>
   );

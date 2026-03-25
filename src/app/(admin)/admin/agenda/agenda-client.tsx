@@ -25,9 +25,13 @@ import {
   MessageCircle,
   X,
   Loader2,
+  ChevronRight,
+  ArrowLeft,
+  Trash2,
 } from "@/lib/icons";
 import { toast } from "sonner";
 import Link from "next/link";
+import { buildWeekDays } from "@/lib/date-utils";
 
 interface SessionRow {
   uuid: string;
@@ -43,26 +47,44 @@ interface SessionRow {
   spotName: string;
 }
 
-interface AgendaClientProps {
-  sessions: SessionRow[];
+interface AvailableSlot {
+  id: number;
+  time: string;
+  booked: boolean;
+  instructorName: string;
+  spotName: string | null;
 }
 
-export function AgendaClient({ sessions: initialSessions }: AgendaClientProps) {
+interface AgendaClientProps {
+  sessions: SessionRow[];
+  currentDate: string;
+  availableSlots?: AvailableSlot[];
+}
+
+export function AgendaClient({ sessions: initialSessions, currentDate, availableSlots = [] }: AgendaClientProps) {
   const router = useRouter();
   const [sessions, setSessions] = useState(initialSessions);
+  const [slots, setSlots] = useState(availableSlots);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     action: "complete" | "cancel";
     session: SessionRow | null;
   }>({ open: false, action: "complete", session: null });
+  const [deleteSlotDialog, setDeleteSlotDialog] = useState<{ open: boolean; slot: AvailableSlot | null }>({ open: false, slot: null });
   const [loading, setLoading] = useState(false);
+  const [deletingSlot, setDeletingSlot] = useState(false);
 
-  const today = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const weekDays = buildWeekDays(currentDate);
+
+  function navigateToDate(date: string) {
+    router.push(`/admin/agenda?date=${date}`);
+  }
+
+  function shiftWeek(direction: number) {
+    const d = new Date(currentDate + "T12:00:00");
+    d.setDate(d.getDate() + direction * 7);
+    navigateToDate(d.toISOString().split("T")[0]);
+  }
 
   async function handleAction(action: "complete" | "cancel", uuid: string) {
     setLoading(true);
@@ -97,6 +119,27 @@ export function AgendaClient({ sessions: initialSessions }: AgendaClientProps) {
     }
   }
 
+  async function handleDeleteSlot() {
+    if (!deleteSlotDialog.slot) return;
+    setDeletingSlot(true);
+    try {
+      const res = await fetch("/api/admin/agendas/slots/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slotId: deleteSlotDialog.slot.id }),
+      });
+      if (!res.ok) throw new Error("Falha ao excluir");
+      setSlots((prev) => prev.filter((s) => s.id !== deleteSlotDialog.slot!.id));
+      toast.success("Horário excluído!");
+      setDeleteSlotDialog({ open: false, slot: null });
+      router.refresh();
+    } catch {
+      toast.error("Erro ao excluir horário");
+    } finally {
+      setDeletingSlot(false);
+    }
+  }
+
   const activeSessions = sessions.filter(
     (s) => !["completed", "cancelled", "cancelled_weather", "cancelled_student"].includes(s.status),
   );
@@ -107,10 +150,7 @@ export function AgendaClient({ sessions: initialSessions }: AgendaClientProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Agenda do dia</h1>
-          <p className="text-muted-foreground text-sm capitalize">{today}</p>
-        </div>
+        <h1 className="text-2xl font-bold">Agenda</h1>
         <Button asChild>
           <Link href="/admin/agenda/nova">
             <Plus className="mr-2 h-4 w-4" />
@@ -119,10 +159,38 @@ export function AgendaClient({ sessions: initialSessions }: AgendaClientProps) {
         </Button>
       </div>
 
+      {/* Day navigation */}
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="shrink-0" onClick={() => shiftWeek(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex flex-1 gap-1 overflow-x-auto scrollbar-hide">
+          {weekDays.map((day) => (
+            <button
+              key={day.date}
+              onClick={() => navigateToDate(day.date)}
+              className={`flex min-w-[60px] flex-1 flex-col items-center rounded-lg px-2 py-2 text-xs transition-colors ${
+                day.date === currentDate
+                  ? "bg-primary text-primary-foreground font-semibold"
+                  : day.isToday
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <span className="capitalize">{day.dayLabel}</span>
+              <span className="text-[11px]">{day.label}</span>
+            </button>
+          ))}
+        </div>
+        <Button variant="ghost" size="icon" className="shrink-0" onClick={() => shiftWeek(1)}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
       {sessions.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
           <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="text-lg font-medium">Nenhuma aula hoje</h3>
+          <h3 className="text-lg font-medium">Nenhuma aula neste dia</h3>
           <p className="text-muted-foreground text-sm mt-1">
             Crie uma nova agenda para começar a agendar aulas.
           </p>
@@ -161,6 +229,71 @@ export function AgendaClient({ sessions: initialSessions }: AgendaClientProps) {
           )}
         </>
       )}
+
+      {/* Available Slots */}
+      {slots.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Horários Disponíveis ({slots.filter((s) => !s.booked).length} / {slots.length})
+          </h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {slots.map((slot) => (
+              <div
+                key={slot.id}
+                className={`rounded-xl border bg-card p-3 shadow-sm flex items-center gap-3 ${slot.booked ? "opacity-50" : ""}`}
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">{slot.time}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {slot.instructorName}
+                    {slot.spotName && ` · ${slot.spotName}`}
+                  </p>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${slot.booked ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+                  {slot.booked ? "Ocupado" : "Livre"}
+                </span>
+                {!slot.booked && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleteSlotDialog({ open: true, slot })}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Delete Slot Confirmation */}
+      <Dialog
+        open={deleteSlotDialog.open}
+        onOpenChange={(open) => !deletingSlot && setDeleteSlotDialog((prev) => ({ ...prev, open }))}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir horário</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o horário {deleteSlotDialog.slot?.time}? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteSlotDialog({ open: false, slot: null })} disabled={deletingSlot}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteSlot} disabled={deletingSlot}>
+              {deletingSlot && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={confirmDialog.open}

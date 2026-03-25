@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
+import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import type { CreateUserInput } from "./schema";
 
@@ -13,6 +14,7 @@ export async function registerStudent(
   data: Omit<CreateUserInput, "role"> & RegisterStudentExtras
 ) {
   const { level, goals, notes, ...userFields } = data;
+  const hashedPassword = await hash(userFields.password, 12);
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.users.create({
@@ -20,7 +22,7 @@ export async function registerStudent(
         name: userFields.name,
         email: userFields.email,
         phone: userFields.phone,
-        password: userFields.password,
+        password: hashedPassword,
         role: "student",
       },
     });

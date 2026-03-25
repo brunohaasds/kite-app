@@ -12,8 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { User, Calendar, Zap, Award, LogOut, Settings, Bell } from "@/lib/icons";
+import { Calendar, Zap, Award, LogOut, Settings, Bell } from "@/lib/icons";
 import { EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
+import { UserAvatar } from "@/components/shared/user-avatar";
+import { ImageUpload } from "@/components/shared/image-upload";
 
 interface Props {
   user: { id: number; name: string; email: string; phone: string | null };
@@ -48,19 +50,31 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
 
   return (
     <div className="space-y-6">
-      {/* Profile header */}
-      <div className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
-          {user.name[0]}
-        </div>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">{user.name}</h1>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
-          {level && (
-            <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              {EXPERIENCE_LEVEL_LABELS[level] ?? level}
-            </span>
-          )}
+      <div className="rounded-b-3xl bg-primary p-6 text-primary-foreground shadow-lg -mx-4 -mt-4 mb-6">
+        <div className="flex items-center gap-4">
+          <ImageUpload
+            currentImageUrl={null}
+            onUpload={async (url) => {
+              await fetch("/api/user/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ avatar: url }),
+              });
+              toast.success("Avatar atualizado!");
+            }}
+            context="users"
+            size="lg"
+            className="[&_button]:border-white/30"
+          />
+          <div className="flex-1">
+            <h1 className="text-xl font-bold">{user.name}</h1>
+            <p className="text-sm opacity-90">{user.email}</p>
+            {level && (
+              <span className="mt-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
+                {EXPERIENCE_LEVEL_LABELS[level] ?? level}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

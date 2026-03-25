@@ -2,6 +2,7 @@
 // Roles
 // ============================================================
 export const ROLES = {
+  SUPERADMIN: "superadmin",
   ADMIN: "admin",
   INSTRUCTOR: "instructor",
   STUDENT: "student",
@@ -94,15 +95,33 @@ export const DEFAULTS = {
 export const STUDENT_NAV_ITEMS = [
   { href: "/aluno/aulas", label: "Aulas", icon: "Calendar" },
   { href: "/aluno/pacotes", label: "Pacotes", icon: "Zap" },
+  { href: "/aluno/convidar", label: "Convidar", icon: "UserPlus" },
   { href: "/aluno/conta", label: "Conta", icon: "User" },
 ] as const;
 
+export const INSTRUCTOR_NAV_ITEMS = [
+  { href: "/instrutor/agenda", label: "Agenda", icon: "Calendar" },
+  { href: "/instrutor/conta", label: "Conta", icon: "User" },
+] as const;
+
 export const ADMIN_NAV_ITEMS = [
+  { href: "/admin", label: "Dashboard", icon: "Home" },
   { href: "/admin/agenda", label: "Agenda", icon: "Calendar" },
   { href: "/admin/agenda/nova", label: "Nova Agenda", icon: "Plus" },
   { href: "/admin/alunos", label: "Alunos", icon: "Users" },
+  { href: "/admin/instrutores", label: "Instrutores", icon: "Award" },
+  { href: "/admin/spots", label: "Spots", icon: "MapPin" },
+  { href: "/admin/convites", label: "Convites", icon: "Mail" },
   { href: "/admin/pacotes", label: "Pacotes", icon: "Package" },
   { href: "/admin/financeiro", label: "Financeiro", icon: "DollarSign" },
+  { href: "/admin/escola", label: "Escola", icon: "Settings" },
+] as const;
+
+export const SUPERADMIN_NAV_ITEMS = [
+  { href: "/super-admin", label: "Dashboard", icon: "Home" },
+  { href: "/super-admin/spots", label: "Global Spots", icon: "MapPin" },
+  { href: "/super-admin/escolas", label: "Escolas", icon: "Store" },
+  { href: "/super-admin/alunos", label: "Alunos", icon: "Users" },
 ] as const;
 
 // ============================================================

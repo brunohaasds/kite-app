@@ -1,13 +1,31 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getById } from "@/domain/organizations/repo";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Clock, Wind, Backpack, Star, Globe, ExternalLink } from "@/lib/icons";
+import { Clock, Wind, Backpack, Star, Globe, ExternalLink, ChevronRight } from "@/lib/icons";
 import { MobileContainer } from "@/components/layout/mobile-container";
+import { UserAvatar } from "@/components/shared/user-avatar";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const orgId = Number(id);
+  if (isNaN(orgId)) {
+    return { title: "Escola" };
+  }
+  const org = await getById(orgId);
+  if (!org) {
+    return { title: "Escola não encontrada" };
+  }
+  return {
+    title: `${org.name} - Agendar Aula`,
+    ...(org.description ? { description: org.description } : {}),
+  };
 }
 
 export default async function SchoolLandingPage({ params }: Props) {
@@ -129,11 +147,13 @@ export default async function SchoolLandingPage({ params }: Props) {
             <h2 className="mb-3 text-xl font-bold">Instrutores</h2>
             <div className="space-y-3">
               {instructors.map((inst) => (
-                <div key={inst.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                <Link
+                  key={inst.id}
+                  href={`/escola/${orgId}/instrutor/${inst.id}`}
+                  className="block rounded-xl border bg-card p-4 shadow-sm hover:border-primary/30 transition-colors"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
-                      {inst.user.name[0]}
-                    </div>
+                    <UserAvatar name={inst.user.name} imageUrl={inst.avatar} size="lg" />
                     <div className="flex-1">
                       <h3 className="font-semibold">{inst.user.name}</h3>
                       {inst.certification && (
@@ -147,8 +167,9 @@ export default async function SchoolLandingPage({ params }: Props) {
                         </p>
                       )}
                     </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

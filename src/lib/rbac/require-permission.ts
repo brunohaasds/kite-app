@@ -30,7 +30,15 @@ export async function requireAuth() {
 
 export async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "admin") {
+  if (!session?.user || (session.user.role !== "admin" && session.user.role !== "superadmin")) {
+    redirect("/login");
+  }
+  return session;
+}
+
+export async function requireSuperAdmin() {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "superadmin") {
     redirect("/login");
   }
   return session;

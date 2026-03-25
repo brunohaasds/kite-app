@@ -2,11 +2,38 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, User, Mail, Phone, MessageCircle } from "@/lib/icons";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Search,
+  User,
+  Mail,
+  Phone,
+  MessageCircle,
+  Pencil,
+  Trash2,
+  Loader2,
+} from "@/lib/icons";
 import { whatsappLink } from "@/lib/utils";
+import { UserAvatar } from "@/components/shared/user-avatar";
 
 interface StudentRow {
   uuid: string;
@@ -28,13 +55,86 @@ const LEVEL_CLASSES: Record<string, string> = {
   avancado: "bg-green-100 text-green-800",
 };
 
+const LEVEL_OPTIONS = ["iniciante", "intermediario", "avancado"] as const;
+
 export function AlunosClient({ students }: { students: StudentRow[] }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
+  const [editStudent, setEditStudent] = useState<StudentRow | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editLevel, setEditLevel] = useState<string>("iniciante");
+  const [saving, setSaving] = useState(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<StudentRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const filtered = students.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()),
   );
+
+  function openEdit(s: StudentRow) {
+    setEditStudent(s);
+    setEditName(s.name);
+    setEditPhone(s.phone);
+    setEditLevel(s.level in LEVEL_LABELS ? s.level : "iniciante");
+  }
+
+  async function handleSaveEdit() {
+    if (!editStudent) return;
+    if (!editName.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/students/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uuid: editStudent.uuid,
+          name: editName.trim(),
+          phone: editPhone,
+          level: editLevel,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Erro ao atualizar");
+      }
+      toast.success("Aluno atualizado");
+      setEditStudent(null);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/students/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uuid: deleteTarget.uuid }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Erro ao excluir");
+      }
+      toast.success("Aluno removido");
+      setDeleteTarget(null);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao excluir");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -71,24 +171,26 @@ export function AlunosClient({ students }: { students: StudentRow[] }) {
           {filtered.map((student) => (
             <div
               key={student.uuid}
-              className="rounded-xl border bg-card p-4 shadow-sm cursor-pointer hover:border-primary/30 transition-colors"
-              onClick={() => router.push(`/admin/aluno/${student.uuid}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") router.push(`/admin/aluno/${student.uuid}`);
-              }}
+              className="rounded-xl border bg-card p-4 shadow-sm hover:border-primary/30 transition-colors flex items-center gap-3"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold shrink-0">
-                  {student.name.charAt(0).toUpperCase()}
-                </div>
+              <div
+                className="flex flex-1 min-w-0 items-center gap-3 cursor-pointer"
+                onClick={() => router.push(`/admin/aluno/${student.uuid}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") router.push(`/admin/aluno/${student.uuid}`);
+                }}
+              >
+                <UserAvatar name={student.name} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium truncate">{student.name}</span>
                     <Badge
                       variant="secondary"
-                      className={LEVEL_CLASSES[student.level] ?? "bg-slate-200 text-slate-700"}
+                      className={
+                        LEVEL_CLASSES[student.level] ?? "bg-slate-200 text-slate-700"
+                      }
                     >
                       {LEVEL_LABELS[student.level] ?? student.level}
                     </Badge>
@@ -106,6 +208,32 @@ export function AlunosClient({ students }: { students: StudentRow[] }) {
                     )}
                   </div>
                 </div>
+              </div>
+              <div className="flex items-center shrink-0 gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(student);
+                  }}
+                  aria-label="Editar aluno"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(student);
+                  }}
+                  aria-label="Excluir aluno"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
                 {student.phone && (
                   <Button
                     variant="ghost"
@@ -124,6 +252,89 @@ export function AlunosClient({ students }: { students: StudentRow[] }) {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={!!editStudent}
+        onOpenChange={(open) => !saving && !open && setEditStudent(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar aluno</DialogTitle>
+            <DialogDescription>
+              Atualize nome, telefone e nível de experiência. O e-mail não pode ser alterado aqui.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Nome</Label>
+              <Input
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                disabled={saving}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-phone">Telefone</Label>
+              <Input
+                id="edit-phone"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                disabled={saving}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Nível</Label>
+              <Select value={editLevel} onValueChange={setEditLevel} disabled={saving}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVEL_OPTIONS.map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {LEVEL_LABELS[v]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditStudent(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !deleting && !open && setDeleteTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir aluno</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja remover{" "}
+              <span className="font-medium text-foreground">{deleteTarget?.name}</span> da
+              escola? Esta ação pode ser revertida apenas pelo suporte.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

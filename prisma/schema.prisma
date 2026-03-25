@@ -24,14 +24,17 @@ model organizations {
   updated_at  DateTime  @updatedAt @db.Timestamp(0)
   deleted_at  DateTime? @db.Timestamp(0)
 
-  spots       spots[]
-  members     members[]
-  students    students[]
-  instructors instructors[]
-  packages    packages[]
-  sessions    sessions[]
-  agendas     agendas[]
-  payments    payments[]
+  spots             spots[]
+  members           members[]
+  students          students[]
+  instructors       instructors[]
+  packages          packages[]
+  sessions          sessions[]
+  agendas           agendas[]
+  payments          payments[]
+  invites           invites[]
+  owned_spots       global_spots[]     @relation("SpotOwner")
+  spot_permissions  spot_permissions[]
 }
 
 // ============================================================
@@ -41,6 +44,7 @@ model spots {
   id              Int           @id @default(autoincrement())
   uuid            String        @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
   organization_id Int
+  global_spot_id  Int?
   name            String        @db.VarChar(255)
   description     String?       @db.Text
   created_at      DateTime      @default(now()) @db.Timestamp(0)
@@ -48,6 +52,7 @@ model spots {
   deleted_at      DateTime?     @db.Timestamp(0)
 
   organization organizations @relation(fields: [organization_id], references: [id])
+  global_spot  global_spots? @relation(fields: [global_spot_id], references: [id])
   sessions     sessions[]
   agenda_slots agenda_slots[]
 }
@@ -62,15 +67,17 @@ model users {
   email      String    @unique @db.VarChar(255)
   phone      String?   @db.VarChar(20)
   password   String    @db.VarChar(255)
-  role       String    @db.VarChar(50) // admin | instructor | student
+  role       String    @db.VarChar(50) // superadmin | admin | instructor | student
   last_login_at DateTime? @db.Timestamp(0)
   created_at DateTime  @default(now()) @db.Timestamp(0)
   updated_at DateTime  @updatedAt @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
 
-  members     members[]
-  student     students?
-  instructor  instructors?
+  members           members[]
+  student           students?
+  instructor        instructors?
+  invites           invites[]
+  spot_permissions  spot_permissions[]
 }
 
 // ============================================================
@@ -123,6 +130,8 @@ model instructors {
   certification   String?   @db.VarChar(100)
   experience_years Int?
   bio             String?   @db.Text
+  avatar          String?   @db.VarChar(500)
+  extras          Json?
   created_at      DateTime  @default(now()) @db.Timestamp(0)
   updated_at      DateTime  @updatedAt @db.Timestamp(0)
   deleted_at      DateTime? @db.Timestamp(0)
@@ -273,4 +282,72 @@ model payments {
   organization    organizations     @relation(fields: [organization_id], references: [id])
   student         students          @relation(fields: [student_id], references: [id])
   student_package student_packages? @relation(fields: [student_package_id], references: [id])
+}
+
+// ============================================================
+// Invites (email invitations to join an organization)
+// ============================================================
+model invites {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  token           String    @unique @db.VarChar(64)
+  organization_id Int
+  invited_by_id   Int
+  email           String    @db.VarChar(255)
+  status          String    @db.VarChar(20) @default("pending")
+  expires_at      DateTime  @db.Timestamp(0)
+  accepted_at     DateTime? @db.Timestamp(0)
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  organization organizations @relation(fields: [organization_id], references: [id])
+  invited_by   users          @relation(fields: [invited_by_id], references: [id])
+}
+
+// ============================================================
+// Global Spots (managed by super-admin)
+// ============================================================
+model global_spots {
+  id                    Int       @id @default(autoincrement())
+  uuid                  String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  name                  String    @db.VarChar(255)
+  slug                  String    @unique @db.VarChar(255)
+  access                String    @db.VarChar(20) @default("public") // public | private
+  description           String?   @db.Text
+  image                 String?   @db.VarChar(500)
+  tips                  Json?
+  services              Json?
+  latitude              Decimal?  @db.Decimal(10, 7)
+  longitude             Decimal?  @db.Decimal(10, 7)
+  parent_spot_id        Int?
+  owner_organization_id Int?
+  created_at            DateTime  @default(now()) @db.Timestamp(0)
+  updated_at            DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at            DateTime? @db.Timestamp(0)
+
+  parent_spot        global_spots?      @relation("SpotHierarchy", fields: [parent_spot_id], references: [id])
+  children           global_spots[]     @relation("SpotHierarchy")
+  owner_organization organizations?     @relation("SpotOwner", fields: [owner_organization_id], references: [id])
+  permissions        spot_permissions[]
+  spots              spots[]
+}
+
+// ============================================================
+// Spot Permissions (access control for private spots)
+// ============================================================
+model spot_permissions {
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  global_spot_id  Int
+  organization_id Int
+  status          String   @db.VarChar(20) @default("approved") // approved | revoked
+  granted_by_id   Int
+  created_at      DateTime @default(now()) @db.Timestamp(0)
+  updated_at      DateTime @updatedAt @db.Timestamp(0)
+
+  global_spot  global_spots  @relation(fields: [global_spot_id], references: [id])
+  organization organizations @relation(fields: [organization_id], references: [id])
+  granted_by   users         @relation(fields: [granted_by_id], references: [id])
+
+  @@unique([global_spot_id, organization_id])
 }

@@ -3,6 +3,17 @@ import type { Resource, Action } from "./resources";
 type PermissionMap = Record<string, Partial<Record<Resource, Action[]>>>;
 
 export const ROLE_RULES: PermissionMap = {
+  superadmin: {
+    organizations: ["list", "read", "create", "update", "delete"],
+    spots: ["list", "read", "create", "update", "delete"],
+    users: ["list", "read", "create", "update", "delete"],
+    students: ["list", "read", "create", "update", "delete"],
+    instructors: ["list", "read", "create", "update", "delete"],
+    packages: ["list", "read", "create", "update", "delete"],
+    sessions: ["list", "read", "create", "update", "delete"],
+    agendas: ["list", "read", "create", "update", "delete"],
+    payments: ["list", "read", "create", "update", "delete"],
+  },
   admin: {
     organizations: ["list", "read", "update"],
     spots: ["list", "read", "create", "update", "delete"],

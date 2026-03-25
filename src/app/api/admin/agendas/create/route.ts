@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  date: z.string().min(1),
+  dayName: z.string().min(1),
+  slots: z
+    .array(
+      z.object({
+        time: z.string().min(1),
+        instructorId: z.number().nullable(),
+        spotId: z.number().nullable().optional(),
+      }),
+    )
+    .min(1),
+});
 
 export async function POST(request: Request) {
   try {
@@ -9,18 +24,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const { date, dayName, slots } = (await request.json()) as {
-      date: string;
-      dayName: string;
-      slots: { time: string; instructorId: number; spotId?: number }[];
-    };
-
-    if (!date || !dayName || !slots?.length) {
+    const parsed = bodySchema.safeParse(await request.json());
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "date, dayName e slots são obrigatórios" },
         { status: 400 },
       );
     }
+
+    const { date, dayName, slots } = parsed.data;
 
     const orgId = session.user.organizationId!;
     const slug = `${date}-${orgId}`;

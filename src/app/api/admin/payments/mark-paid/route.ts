@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  paymentId: z.string().min(1),
+  method: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -9,28 +15,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const { paymentId, method } = await request.json();
-    if (!paymentId) {
-      return NextResponse.json(
-        { error: "paymentId é obrigatório" },
-        { status: 400 },
-      );
+    const parsed = bodySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "paymentId é obrigatório" }, { status: 400 });
     }
 
+    const { paymentId, method } = parsed.data;
     const orgId = session.user.organizationId!;
+
     const existing = await prisma.payments.findFirst({
-      where: {
-        uuid: paymentId,
-        organization_id: orgId,
-        deleted_at: null,
-      },
+      where: { uuid: paymentId, organization_id: orgId, deleted_at: null },
     });
 
     if (!existing) {
-      return NextResponse.json(
-        { error: "Pagamento não encontrado" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Pagamento não encontrado" }, { status: 404 });
     }
 
     await prisma.payments.update({

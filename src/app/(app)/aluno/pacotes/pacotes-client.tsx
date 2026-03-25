@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export function PacotesClient({ myPackages, availablePackages, studentId }: Props) {
+  const router = useRouter();
   const [buyPkg, setBuyPkg] = useState<AvailablePackage | null>(null);
   const [buying, setBuying] = useState(false);
 
@@ -57,7 +59,7 @@ export function PacotesClient({ myPackages, availablePackages, studentId }: Prop
       if (!res.ok) throw new Error();
       toast.success("Pacote adquirido com sucesso!");
       setBuyPkg(null);
-      window.location.reload();
+      router.refresh();
     } catch {
       toast.error("Erro ao adquirir pacote.");
     } finally {
@@ -67,7 +69,10 @@ export function PacotesClient({ myPackages, availablePackages, studentId }: Prop
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Meus Pacotes</h1>
+      <div className="rounded-b-3xl bg-primary p-6 text-primary-foreground shadow-lg -mx-4 -mt-4 mb-6">
+        <h1 className="mb-1 text-2xl font-bold">Meus Pacotes</h1>
+        <p className="text-sm opacity-90">{myPackages.length} pacote{myPackages.length !== 1 && "s"} ativo{myPackages.length !== 1 && "s"}</p>
+      </div>
 
       {/* Active packages */}
       {myPackages.length > 0 ? (
