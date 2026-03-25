@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Organizations (Schools)
+// ============================================================
+model organizations {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  site        String?   @db.VarChar(500)
+  instagram   String?   @db.VarChar(255)
+  avatar      String?   @db.VarChar(500)
+  whatsapp    String?   @db.VarChar(20)
+  settings    Json?
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+  updated_at  DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+
+  spots       spots[]
+  members     members[]
+  students    students[]
+  instructors instructors[]
+  packages    packages[]
+  sessions    sessions[]
+  agendas     agendas[]
+  payments    payments[]
+}
+
+// ============================================================
+// Spots (Locations where lessons happen)
+// ============================================================
+model spots {
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id Int
+  name            String        @db.VarChar(255)
+  description     String?       @db.Text
+  created_at      DateTime      @default(now()) @db.Timestamp(0)
+  updated_at      DateTime      @updatedAt @db.Timestamp(0)
+  deleted_at      DateTime?     @db.Timestamp(0)
+
+  organization organizations @relation(fields: [organization_id], references: [id])
+  sessions     sessions[]
+  agenda_slots agenda_slots[]
+}
+
+// ============================================================
+// Users
+// ============================================================
+model users {
+  id         Int       @id @default(autoincrement())
+  uuid       String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  name       String    @db.VarChar(255)
+  email      String    @unique @db.VarChar(255)
+  phone      String?   @db.VarChar(20)
+  password   String    @db.VarChar(255)
+  role       String    @db.VarChar(50) // admin | instructor | student
+  last_login_at DateTime? @db.Timestamp(0)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+
+  members     members[]
+  student     students?
+  instructor  instructors?
+}
+
+// ============================================================
+// Members (user <-> organization link)
+// ============================================================
+model members {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id Int
+  user_id         Int
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  organization organizations @relation(fields: [organization_id], references: [id])
+  user         users         @relation(fields: [user_id], references: [id])
+
+  @@unique([organization_id, user_id])
+}
+
+// ============================================================
+// Students (student-specific data)
+// ============================================================
+model students {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id Int
+  user_id         Int       @unique
+  level           String?   @db.VarChar(50) // iniciante | intermediario | avancado
+  goals           Json?
+  notes           String?   @db.Text
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  updated_at      DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  organization    organizations    @relation(fields: [organization_id], references: [id])
+  user            users            @relation(fields: [user_id], references: [id])
+  student_packages student_packages[]
+  sessions        sessions[]       @relation("student_sessions")
+  payments        payments[]
+}
+
+// ============================================================
+// Instructors (instructor-specific data)
+// ============================================================
+model instructors {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id Int
+  user_id         Int       @unique
+  certification   String?   @db.VarChar(100)
+  experience_years Int?
+  bio             String?   @db.Text
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  updated_at      DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  organization organizations @relation(fields: [organization_id], references: [id])
+  user         users         @relation(fields: [user_id], references: [id])
+  sessions     sessions[]    @relation("instructor_sessions")
+  agenda_slots agenda_slots[]
+}
+
+// ============================================================
+// Packages (lesson packages offered by school)
+// ============================================================
+model packages {
+  id                       Int       @id @default(autoincrement())
+  uuid                     String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id          Int
+  title                    String    @db.VarChar(255)
+  description              String?   @db.Text
+  session_count            Int
+  session_duration_minutes Int       @default(120)
+  price                    Decimal   @db.Decimal(10, 2)
+  validity_days            Int?
+  active                   Boolean   @default(true)
+  created_at               DateTime  @default(now()) @db.Timestamp(0)
+  updated_at               DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at               DateTime? @db.Timestamp(0)
+
+  organization     organizations      @relation(fields: [organization_id], references: [id])
+  student_packages student_packages[]
+}
+
+// ============================================================
+// Student Packages (purchased packages)
+// ============================================================
+model student_packages {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  student_id         Int
+  package_id         Int
+  sessions_total     Int
+  sessions_used      Int       @default(0)
+  sessions_remaining Int
+  status             String    @db.VarChar(50) // active | completed | cancelled | expired
+  purchase_date      DateTime  @db.Timestamp(0)
+  expiry_date        DateTime? @db.Timestamp(0)
+  created_at         DateTime  @default(now()) @db.Timestamp(0)
+  updated_at         DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at         DateTime? @db.Timestamp(0)
+
+  student  students @relation(fields: [student_id], references: [id])
+  package  packages @relation(fields: [package_id], references: [id])
+  sessions sessions[]
+  payments payments[]
+}
+
+// ============================================================
+// Sessions (lessons - scheduled/completed)
+// ============================================================
+model sessions {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id    Int
+  spot_id            Int?
+  student_id         Int?
+  instructor_id      Int?
+  student_package_id Int?
+  agenda_slot_id     Int?
+  date               DateTime  @db.Date
+  start_time         String    @db.VarChar(5) // HH:mm
+  end_time           String?   @db.VarChar(5)
+  status             String    @db.VarChar(50) // scheduled | confirmed | completed | cancelled | cancelled_weather | cancelled_student
+  type               String?   @db.VarChar(100) // aula avulsa, pacote, etc.
+  notes              String?   @db.Text
+  weather            Json?
+  created_at         DateTime  @default(now()) @db.Timestamp(0)
+  updated_at         DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at         DateTime? @db.Timestamp(0)
+
+  organization    organizations    @relation(fields: [organization_id], references: [id])
+  spot            spots?           @relation(fields: [spot_id], references: [id])
+  student         students?        @relation("student_sessions", fields: [student_id], references: [id])
+  instructor      instructors?     @relation("instructor_sessions", fields: [instructor_id], references: [id])
+  student_package student_packages? @relation(fields: [student_package_id], references: [id])
+  agenda_slot     agenda_slots?    @relation(fields: [agenda_slot_id], references: [id])
+}
+
+// ============================================================
+// Agendas (published schedules)
+// ============================================================
+model agendas {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id Int
+  slug            String    @unique @db.VarChar(255)
+  date            DateTime  @db.Date
+  day_name        String    @db.VarChar(50)
+  published       Boolean   @default(false)
+  rules           Json?
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  updated_at      DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+
+  organization organizations @relation(fields: [organization_id], references: [id])
+  slots        agenda_slots[]
+}
+
+// ============================================================
+// Agenda Slots (time slots within an agenda)
+// ============================================================
+model agenda_slots {
+  id            Int       @id @default(autoincrement())
+  uuid          String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  agenda_id     Int
+  spot_id       Int?
+  instructor_id Int?
+  time          String    @db.VarChar(5) // HH:mm
+  booked        Boolean   @default(false)
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  deleted_at    DateTime? @db.Timestamp(0)
+
+  agenda     agendas      @relation(fields: [agenda_id], references: [id], onDelete: Cascade)
+  spot       spots?       @relation(fields: [spot_id], references: [id])
+  instructor instructors? @relation(fields: [instructor_id], references: [id])
+  sessions   sessions[]
+}
+
+// ============================================================
+// Payments
+// ============================================================
+model payments {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  organization_id    Int
+  student_id         Int
+  student_package_id Int?
+  amount             Decimal   @db.Decimal(10, 2)
+  method             String?   @db.VarChar(20) // pix | card | cash
+  status             String    @db.VarChar(50) // pending | paid | cancelled | refunded | overdue
+  installment_number Int?
+  total_installments Int?
+  due_date           DateTime? @db.Date
+  paid_at            DateTime? @db.Timestamp(0)
+  created_at         DateTime  @default(now()) @db.Timestamp(0)
+  updated_at         DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at         DateTime? @db.Timestamp(0)
+
+  organization    organizations     @relation(fields: [organization_id], references: [id])
+  student         students          @relation(fields: [student_id], references: [id])
+  student_package student_packages? @relation(fields: [student_package_id], references: [id])
+}
