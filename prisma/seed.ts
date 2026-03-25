@@ -9,8 +9,9 @@ const prisma = new PrismaClient({ adapter });
 const PASSWORD = hashSync("123456", 10);
 
 async function main() {
-  // Clear in reverse dependency order
+  // Clear in reverse dependency order (includes global_spots / invites for re-runs)
   await prisma.payments.deleteMany();
+  await prisma.service_bookings.deleteMany();
   await prisma.sessions.deleteMany();
   await prisma.agenda_slots.deleteMany();
   await prisma.agendas.deleteMany();
@@ -18,8 +19,14 @@ async function main() {
   await prisma.packages.deleteMany();
   await prisma.instructors.deleteMany();
   await prisma.students.deleteMany();
+  await prisma.invites.deleteMany();
+  await prisma.spot_permissions.deleteMany();
+  await prisma.service_scope.deleteMany();
+  await prisma.services.deleteMany();
   await prisma.members.deleteMany();
   await prisma.spots.deleteMany();
+  await prisma.global_spots.deleteMany({ where: { parent_spot_id: { not: null } } });
+  await prisma.global_spots.deleteMany();
   await prisma.users.deleteMany();
   await prisma.organizations.deleteMany();
 
@@ -69,18 +76,71 @@ async function main() {
     },
   });
 
-  // ── Spots ──────────────────────────────────────────────────
+  // ── Global spots (catálogo super-admin) + vínculo operacional ──
+  const gPrea = await prisma.global_spots.create({
+    data: {
+      name: "Preá",
+      slug: "prea",
+      access: "public",
+      description: "Praia de Preá — vento constante no Ceará",
+      tips: ["Chegar com antecedência", "Protetor solar"],
+      services: ["Estacionamento", "Restaurantes próximos"],
+    },
+  });
+  const gJeri = await prisma.global_spots.create({
+    data: {
+      name: "Jericoacoara",
+      slug: "jericoacoara",
+      access: "public",
+      description: "Lagoas e mar de Jeri",
+    },
+  });
+  const gTramandai = await prisma.global_spots.create({
+    data: {
+      name: "Tramandaí",
+      slug: "tramandai",
+      access: "public",
+      description: "Litoral gaúcho com ventos sul",
+    },
+  });
+
+  // ── Spots (operacionais por escola, ligados ao global) ─────
   const spotPrea = await prisma.spots.create({
-    data: { organization_id: org1.id, name: "Preá", description: "Praia de Preá — condições perfeitas de vento" },
+    data: {
+      organization_id: org1.id,
+      global_spot_id: gPrea.id,
+      name: "Preá",
+      description: "Praia de Preá — condições perfeitas de vento",
+    },
   });
   const spotJeri = await prisma.spots.create({
-    data: { organization_id: org2.id, name: "Jericoacoara", description: "Lagoas e mar de Jeri" },
+    data: {
+      organization_id: org2.id,
+      global_spot_id: gJeri.id,
+      name: "Jericoacoara",
+      description: "Lagoas e mar de Jeri",
+    },
   });
   const spotTramandai = await prisma.spots.create({
-    data: { organization_id: org3.id, name: "Tramandaí", description: "Litoral gaúcho com ventos sul" },
+    data: {
+      organization_id: org3.id,
+      global_spot_id: gTramandai.id,
+      name: "Tramandaí",
+      description: "Litoral gaúcho com ventos sul",
+    },
   });
 
   // ── Users (admin) ──────────────────────────────────────────
+  const superAdminUser = await prisma.users.create({
+    data: {
+      name: "Super Admin",
+      email: "superadmin@kiteapp.com",
+      phone: "5585999000000",
+      password: PASSWORD,
+      role: "superadmin",
+    },
+  });
+
   const adminUser = await prisma.users.create({
     data: {
       name: "João Admin",
@@ -116,9 +176,20 @@ async function main() {
     data: { name: "Ana Costa", email: "ana@email.com", phone: "5585999200003", password: PASSWORD, role: "student" },
   });
 
+  const providerUser = await prisma.users.create({
+    data: {
+      name: "Lucas Foto",
+      email: "fotografo@kiteapp.com",
+      phone: "5585999300001",
+      password: PASSWORD,
+      role: "service_provider",
+    },
+  });
+
   // ── Members (user ↔ org) ──────────────────────────────────
   await prisma.members.createMany({
     data: [
+      { organization_id: org1.id, user_id: superAdminUser.id },
       { organization_id: org1.id, user_id: adminUser.id },
       { organization_id: org1.id, user_id: instructorRafael.id },
       { organization_id: org1.id, user_id: instructorMarina.id },
@@ -127,8 +198,37 @@ async function main() {
       { organization_id: org1.id, user_id: studentMaria.id },
       { organization_id: org1.id, user_id: studentPedro.id },
       { organization_id: org1.id, user_id: studentAna.id },
+      { organization_id: org1.id, user_id: providerUser.id },
       { organization_id: org2.id, user_id: adminUser.id },
       { organization_id: org2.id, user_id: instructorRafael.id },
+    ],
+  });
+
+  const svcPhoto = await prisma.services.create({
+    data: {
+      user_id: providerUser.id,
+      type: "photographer",
+      display_name: "Lucas — Fotografia",
+      bio: "Cobertura de aulas e sessões na praia.",
+      whatsapp: "5585999300001",
+      instagram: "lucasfotokite",
+      is_active: true,
+    },
+  });
+  await prisma.service_scope.createMany({
+    data: [
+      {
+        service_id: svcPhoto.id,
+        scope_type: "organization",
+        organization_id: org1.id,
+        global_spot_id: null,
+      },
+      {
+        service_id: svcPhoto.id,
+        scope_type: "global_spot",
+        organization_id: null,
+        global_spot_id: gPrea.id,
+      },
     ],
   });
 
@@ -380,8 +480,11 @@ async function main() {
 
   console.log("Seed completed successfully!");
   console.log(`  Organizations: ${org1.name}, ${org2.name}, ${org3.name}`);
+  console.log(
+    `  Global spots: ${gPrea.slug}, ${gJeri.slug}, ${gTramandai.slug} (públicos)`,
+  );
   console.log(`  Spots: ${spotPrea.name}, ${spotJeri.name}, ${spotTramandai.name}`);
-  console.log(`  Users: admin + 4 instructors + 3 students`);
+  console.log(`  Users: superadmin + admin + 4 instructors + 3 students + 1 service_provider (fotografo@kiteapp.com)`);
   console.log(`  Packages: 5`);
   console.log(`  Sessions: 6`);
   console.log(`  Agendas: 2 (with 8 slots)`);

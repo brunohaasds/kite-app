@@ -6,6 +6,7 @@ export const ROLES = {
   ADMIN: "admin",
   INSTRUCTOR: "instructor",
   STUDENT: "student",
+  SERVICE_PROVIDER: "service_provider",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -102,6 +103,10 @@ export const STUDENT_NAV_ITEMS = [
 export const INSTRUCTOR_NAV_ITEMS = [
   { href: "/instrutor/agenda", label: "Agenda", icon: "Calendar" },
   { href: "/instrutor/conta", label: "Conta", icon: "User" },
+] as const;
+
+export const PRESTADOR_NAV_ITEMS = [
+  { href: "/prestador", label: "Pedidos", icon: "Camera" },
 ] as const;
 
 export const ADMIN_NAV_ITEMS = [

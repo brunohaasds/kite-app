@@ -2,22 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Zap, User, UserPlus } from "@/lib/icons";
+import { Calendar, Zap, User, UserPlus, Camera } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { STUDENT_NAV_ITEMS, INSTRUCTOR_NAV_ITEMS } from "@/lib/constants";
+import {
+  STUDENT_NAV_ITEMS,
+  INSTRUCTOR_NAV_ITEMS,
+  PRESTADOR_NAV_ITEMS,
+} from "@/lib/constants";
 
 const iconMap: Record<string, React.ElementType> = {
   Calendar,
   Zap,
   User,
   UserPlus,
+  Camera,
 };
 
 export function BottomNav() {
   const pathname = usePathname();
 
   const isInstructor = pathname.startsWith("/instrutor");
-  const navItems = isInstructor ? INSTRUCTOR_NAV_ITEMS : STUDENT_NAV_ITEMS;
+  const isPrestador = pathname.startsWith("/prestador");
+  const navItems = isInstructor
+    ? INSTRUCTOR_NAV_ITEMS
+    : isPrestador
+      ? PRESTADOR_NAV_ITEMS
+      : STUDENT_NAV_ITEMS;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card">

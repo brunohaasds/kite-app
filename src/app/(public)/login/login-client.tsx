@@ -42,6 +42,8 @@ export default function LoginClient() {
       router.push("/admin/agenda");
     } else if (role === "instructor") {
       router.push("/instrutor/agenda");
+    } else if (role === "service_provider") {
+      router.push("/prestador");
     } else {
       router.push("/aluno/aulas");
     }

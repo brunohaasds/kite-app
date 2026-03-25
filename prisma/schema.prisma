@@ -35,6 +35,7 @@ model organizations {
   invites           invites[]
   owned_spots       global_spots[]     @relation("SpotOwner")
   spot_permissions  spot_permissions[]
+  service_scopes    service_scope[]
 }
 
 // ============================================================
@@ -67,7 +68,7 @@ model users {
   email      String    @unique @db.VarChar(255)
   phone      String?   @db.VarChar(20)
   password   String    @db.VarChar(255)
-  role       String    @db.VarChar(50) // superadmin | admin | instructor | student
+  role       String    @db.VarChar(50) // superadmin | admin | instructor | student | service_provider
   last_login_at DateTime? @db.Timestamp(0)
   created_at DateTime  @default(now()) @db.Timestamp(0)
   updated_at DateTime  @updatedAt @db.Timestamp(0)
@@ -78,6 +79,7 @@ model users {
   instructor        instructors?
   invites           invites[]
   spot_permissions  spot_permissions[]
+  services          services[]
 }
 
 // ============================================================
@@ -115,8 +117,9 @@ model students {
   organization    organizations    @relation(fields: [organization_id], references: [id])
   user            users            @relation(fields: [user_id], references: [id])
   student_packages student_packages[]
-  sessions        sessions[]       @relation("student_sessions")
-  payments        payments[]
+  sessions         sessions[]       @relation("student_sessions")
+  payments         payments[]
+  service_bookings service_bookings[]
 }
 
 // ============================================================
@@ -216,7 +219,8 @@ model sessions {
   student         students?        @relation("student_sessions", fields: [student_id], references: [id])
   instructor      instructors?     @relation("instructor_sessions", fields: [instructor_id], references: [id])
   student_package student_packages? @relation(fields: [student_package_id], references: [id])
-  agenda_slot     agenda_slots?    @relation(fields: [agenda_slot_id], references: [id])
+  agenda_slot      agenda_slots?    @relation(fields: [agenda_slot_id], references: [id])
+  service_bookings service_bookings[]
 }
 
 // ============================================================
@@ -330,6 +334,7 @@ model global_spots {
   owner_organization organizations?     @relation("SpotOwner", fields: [owner_organization_id], references: [id])
   permissions        spot_permissions[]
   spots              spots[]
+  service_scopes     service_scope[]
 }
 
 // ============================================================
@@ -350,4 +355,69 @@ model spot_permissions {
   granted_by   users         @relation(fields: [granted_by_id], references: [id])
 
   @@unique([global_spot_id, organization_id])
+}
+
+// ============================================================
+// Services (third-party providers: photographers, etc.)
+// ============================================================
+model services {
+  id           Int       @id @default(autoincrement())
+  uuid         String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  user_id      Int       @unique
+  type         String    @db.VarChar(50) // photographer | filmmaker | ...
+  display_name String    @db.VarChar(255)
+  bio          String?   @db.Text
+  whatsapp     String?   @db.VarChar(20)
+  instagram    String?   @db.VarChar(255)
+  avatar       String?   @db.VarChar(500)
+  is_active    Boolean   @default(true)
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  updated_at   DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+
+  user     users              @relation(fields: [user_id], references: [id])
+  scopes   service_scope[]
+  bookings service_bookings[]
+}
+
+// One row: either organization_id OR global_spot_id set (validated in app)
+model service_scope {
+  id               Int      @id @default(autoincrement())
+  uuid             String   @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  service_id       Int
+  scope_type       String   @db.VarChar(20) // organization | global_spot
+  organization_id  Int?
+  global_spot_id   Int?
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+
+  service      services       @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  organization organizations? @relation(fields: [organization_id], references: [id])
+  global_spot  global_spots?  @relation(fields: [global_spot_id], references: [id])
+
+  @@unique([service_id, organization_id])
+  @@unique([service_id, global_spot_id])
+  @@index([organization_id])
+  @@index([global_spot_id])
+}
+
+model service_bookings {
+  id            Int       @id @default(autoincrement())
+  uuid          String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+  service_id    Int
+  student_id    Int?
+  session_id    Int?
+  status        String    @db.VarChar(50) // requested | confirmed | cancelled
+  notes         String?   @db.Text
+  quote_amount  Decimal?  @db.Decimal(10, 2)
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime  @updatedAt @db.Timestamp(0)
+  deleted_at    DateTime? @db.Timestamp(0)
+
+  service services  @relation(fields: [service_id], references: [id])
+  student students? @relation(fields: [student_id], references: [id])
+  session sessions? @relation(fields: [session_id], references: [id])
+
+  @@index([service_id])
+  @@index([student_id])
+  @@index([session_id])
 }

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getById } from "@/domain/organizations/repo";
+import { listForOrganization } from "@/domain/services/repo";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { PartnerServiceCard } from "@/components/services/partner-service-card";
 import { Button } from "@/components/ui/button";
 import { Clock, Wind, Backpack, Star, Globe, ExternalLink, ChevronRight } from "@/lib/icons";
 import { MobileContainer } from "@/components/layout/mobile-container";
@@ -44,6 +47,10 @@ export default async function SchoolLandingPage({ params }: Props) {
     where: { organization_id: orgId, deleted_at: null },
     include: { user: { select: { name: true } } },
   });
+
+  const partners = await listForOrganization(orgId);
+  const session = await auth();
+  const canRequestPartner = session?.user?.role === "student";
 
   const agendas = await prisma.agendas.findMany({
     where: { organization_id: orgId, published: true, deleted_at: null },
@@ -142,6 +149,25 @@ export default async function SchoolLandingPage({ params }: Props) {
         )}
 
         {/* Instructors */}
+        {partners.length > 0 && (
+          <div>
+            <h2 className="mb-3 text-xl font-bold">Parceiros</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Prestadores vinculados a esta escola — combine valores pelo WhatsApp ou peça pelo app
+              (conta de aluno).
+            </p>
+            <div className="space-y-3">
+              {partners.map((p) => (
+                <PartnerServiceCard
+                  key={p.id}
+                  service={p}
+                  canRequest={canRequestPartner}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {instructors.length > 0 && (
           <div>
             <h2 className="mb-3 text-xl font-bold">Instrutores</h2>

@@ -8,6 +8,7 @@ function getHomeRoute(role?: string) {
   if (role === "superadmin") return "/super-admin";
   if (role === "admin") return "/admin/agenda";
   if (role === "instructor") return "/instrutor/agenda";
+  if (role === "service_provider") return "/prestador";
   return "/aluno/aulas";
 }
 
@@ -23,6 +24,7 @@ export default auth((req) => {
     pathname.startsWith("/convite") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/booking") ||
+    pathname.startsWith("/api/service-bookings") ||
     pathname.startsWith("/api/invites") ||
     pathname.startsWith("/api/upload") ||
     pathname === "/";
@@ -52,6 +54,10 @@ export default auth((req) => {
   }
 
   if (pathname.startsWith("/aluno") && role !== "student" && role !== "admin") {
+    return NextResponse.redirect(new URL(getHomeRoute(role), req.url));
+  }
+
+  if (pathname.startsWith("/prestador") && role !== "service_provider") {
     return NextResponse.redirect(new URL(getHomeRoute(role), req.url));
   }
 

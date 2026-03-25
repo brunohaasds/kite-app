@@ -4,7 +4,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { findBySlug } from "@/domain/global-spots/repo";
+import { listForGlobalSpot } from "@/domain/services/repo";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { PartnerServiceCard } from "@/components/services/partner-service-card";
 import { MapPin, Globe, Shield, Store, Calendar, ArrowLeft, CheckCircle2, Star } from "@/lib/icons";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -20,6 +23,10 @@ export default async function SpotPage({ params }: Props) {
   const { slug } = await params;
   const spot = await findBySlug(slug);
   if (!spot) notFound();
+
+  const partners = await listForGlobalSpot(spot.id);
+  const sessionAuth = await auth();
+  const canRequestPartner = sessionAuth?.user?.role === "student";
 
   const linkedOrgIds = spot.spots.map((s) => s.organization.id);
   const permOrgIds = spot.permissions.map((p) => p.organization.id);
@@ -238,6 +245,26 @@ export default async function SpotPage({ params }: Props) {
                     </div>
                   </div>
                 </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Partner services (global spot scope) */}
+        {partners.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Parceiros neste spot</h2>
+            <p className="text-sm text-muted-foreground">
+              Prestadores vinculados a esta praia — entre em contato ou solicite pelo app (conta de
+              aluno).
+            </p>
+            <div className="space-y-3">
+              {partners.map((p) => (
+                <PartnerServiceCard
+                  key={p.id}
+                  service={p}
+                  canRequest={canRequestPartner}
+                />
               ))}
             </div>
           </section>
