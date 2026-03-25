@@ -7,9 +7,16 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
-  title: "Kite App — Gestão de Escolas de Kitesurf",
+  title: {
+    default: "eKite — Gestão de escolas de kitesurf",
+    template: "%s | eKite",
+  },
   description:
     "Plataforma de gestão operacional para escolas de kitesurf. Agenda, alunos, pacotes e financeiro.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

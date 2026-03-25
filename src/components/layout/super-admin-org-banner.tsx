@@ -23,9 +23,9 @@ export function SuperAdminOrgBanner({ orgName }: { orgName: string }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-violet-200 bg-violet-50 px-4 py-2.5 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-100">
+    <div className="flex items-center justify-between gap-3 border-b border-super-admin-banner-border bg-super-admin-banner px-4 py-2.5 text-sm text-super-admin-banner-foreground">
       <div className="flex items-center gap-2 min-w-0">
-        <Shield className="h-4 w-4 shrink-0" />
+        <Shield className="h-4 w-4 shrink-0 text-super-admin" />
         <span className="truncate">
           Você está como admin de <strong>{orgName}</strong>
         </span>
@@ -34,7 +34,7 @@ export function SuperAdminOrgBanner({ orgName }: { orgName: string }) {
         type="button"
         variant="ghost"
         size="sm"
-        className="shrink-0 text-violet-800 hover:bg-violet-100 dark:text-violet-200 dark:hover:bg-violet-900/50"
+        className="shrink-0 text-super-admin hover:bg-super-admin/10 dark:hover:bg-super-admin/25"
         onClick={exitOrg}
       >
         <X className="mr-1 h-3.5 w-3.5" />

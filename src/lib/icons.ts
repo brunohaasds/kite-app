@@ -32,6 +32,7 @@ export {
   CheckCircle2,
   MessageCircle,
   Search,
+  Eye,
   ExternalLink,
   ArrowRight,
   Upload,

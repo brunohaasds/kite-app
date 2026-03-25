@@ -53,10 +53,10 @@ function NavContent({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b px-4 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Wind className="h-4 w-4" />
         </div>
-        <span className="font-bold">Kite App</span>
+        <span className="font-bold tracking-tight">eKite</span>
       </div>
 
       <nav className="flex-1 space-y-1 p-2">

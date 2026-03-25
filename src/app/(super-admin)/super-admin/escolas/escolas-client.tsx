@@ -1,9 +1,18 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Store, Users, Award, MapPin, ArrowRight } from "@/lib/icons";
+import {
+  Store,
+  Users,
+  Award,
+  MapPin,
+  ArrowRight,
+  Search,
+} from "@/lib/icons";
 
 interface OrgRow {
   id: number;
@@ -20,6 +29,13 @@ export function EscolasClient({
   organizations: OrgRow[];
 }) {
   const router = useRouter();
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return organizations;
+    return organizations.filter((o) => o.name.toLowerCase().includes(q));
+  }, [organizations, search]);
 
   async function handleEnterAsAdmin(orgId: number) {
     try {
@@ -46,20 +62,40 @@ export function EscolasClient({
         </p>
       </div>
 
+      {organizations.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome da escola..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {organizations.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
           <Store className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="text-lg font-medium">Nenhuma escola cadastrada</h3>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
+          <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Nenhuma escola encontrada</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tente outro termo de busca.
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {organizations.map((org) => (
+          {filtered.map((org) => (
             <div
               key={org.id}
               className="rounded-xl border bg-card p-4 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-600 shrink-0 overflow-hidden">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-super-admin/10 text-super-admin shrink-0 overflow-hidden">
                   {org.avatar ? (
                     <img
                       src={org.avatar}

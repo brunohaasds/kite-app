@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -8,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, User } from "@/lib/icons";
+import { Users, User, Search } from "@/lib/icons";
 import { EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
 
 interface StudentRow {
@@ -34,13 +35,27 @@ export function AlunosClient({
   organizations: Org[];
 }) {
   const [filterOrgId, setFilterOrgId] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    if (filterOrgId === "all") return students;
-    return students.filter(
-      (s) => s.organizationId === parseInt(filterOrgId, 10),
+    let list =
+      filterOrgId === "all"
+        ? students
+        : students.filter(
+            (s) => s.organizationId === parseInt(filterOrgId, 10),
+          );
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.organizationName.toLowerCase().includes(q),
     );
-  }, [students, filterOrgId]);
+  }, [students, filterOrgId, search]);
+
+  const totalLabel =
+    filterOrgId === "all" ? "no total" : "nesta escola";
 
   return (
     <div className="space-y-6">
@@ -48,8 +63,7 @@ export function AlunosClient({
         <div>
           <h1 className="text-2xl font-bold">Alunos</h1>
           <p className="text-muted-foreground text-sm">
-            {filtered.length} alunos{" "}
-            {filterOrgId !== "all" ? "nesta escola" : "no total"}
+            {filtered.length} alunos {totalLabel}
           </p>
         </div>
         <Select value={filterOrgId} onValueChange={setFilterOrgId}>
@@ -67,10 +81,29 @@ export function AlunosClient({
         </Select>
       </div>
 
+      {students.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, email ou escola..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
           <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="text-lg font-medium">Nenhum aluno encontrado</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {search.trim()
+              ? "Tente outro termo de busca ou ajuste o filtro de escola."
+              : students.length === 0
+                ? "Não há alunos cadastrados."
+                : "Tente ajustar o filtro de escola."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -80,7 +113,7 @@ export function AlunosClient({
               className="rounded-xl border bg-card p-4 shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-600 shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-super-admin/10 text-super-admin shrink-0">
                   <User className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">

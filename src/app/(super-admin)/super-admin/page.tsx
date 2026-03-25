@@ -40,7 +40,7 @@ export default async function SuperAdminDashboardPage() {
             className="rounded-xl border bg-card p-4 shadow-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-super-admin/10 text-super-admin">
                 <kpi.icon className="h-5 w-5" />
               </div>
               <div>

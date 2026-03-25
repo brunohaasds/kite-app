@@ -36,7 +36,7 @@ function baseLayout(schoolName: string, bodyHtml: string): string {
           </tr>
           <tr>
             <td style="padding:18px 24px;border-top:1px solid #e2e8f0;text-align:center;background:${BG};">
-              <p style="margin:0;color:${MUTED};font-size:12px;">Powered by KiteApp</p>
+              <p style="margin:0;color:${MUTED};font-size:12px;">Powered by eKite</p>
             </td>
           </tr>
         </table>
@@ -172,7 +172,7 @@ export function welcomeEmail({
     <p style="margin:0 0 20px;color:${MUTED};">Bem-vindo à <strong style="color:${TEXT};">${escapeHtml(schoolName)}</strong>! A sua conta foi criada com sucesso.</p>
     <p style="margin:0 0 24px;color:${MUTED};">Pode aceder à plataforma para gerir as suas aulas e reservas:</p>
     <p style="margin:0;text-align:center;">
-      <a href="${safeUrl}" style="display:inline-block;background:${PRIMARY};color:#ffffff;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;">Entrar na KiteApp</a>
+      <a href="${safeUrl}" style="display:inline-block;background:${PRIMARY};color:#ffffff;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;">Entrar na eKite</a>
     </p>
     <p style="margin:24px 0 0;color:${MUTED};font-size:13px;text-align:center;">Se o botão não funcionar, copie e cole este link no navegador:<br/><span style="color:${PRIMARY};word-break:break-all;">${safeUrl}</span></p>
   `;

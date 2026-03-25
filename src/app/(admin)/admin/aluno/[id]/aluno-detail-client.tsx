@@ -39,6 +39,7 @@ import {
 } from "@/lib/icons";
 import { toast } from "sonner";
 import Link from "next/link";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface StudentInfo {
   uuid: string;
@@ -150,14 +151,18 @@ export function AlunoDetailClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/alunos">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">Detalhes do Aluno</h1>
-      </div>
+      <AdminSchoolPageHeader
+        title="Detalhes do Aluno"
+        subtitle={student.name}
+        subtitleMobileOnly
+        start={
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin/alunos">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Student Header */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">

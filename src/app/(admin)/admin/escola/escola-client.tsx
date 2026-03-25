@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2, Store } from "@/lib/icons";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface OrgData {
   id: number;
@@ -64,12 +65,10 @@ export function EscolaClient({ org }: { org: OrgData }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Configurações da Escola</h1>
-        <p className="text-muted-foreground text-sm">
-          Informações que aparecem na página pública da escola
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Configurações da Escola"
+        subtitle="Informações que aparecem na página pública da escola"
+      />
 
       <form
         onSubmit={handleSave}

@@ -40,7 +40,7 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b px-4 py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-super-admin text-super-admin-foreground">
           <Shield className="h-4 w-4" />
         </div>
         <span className="font-bold">Super Admin</span>
@@ -62,7 +62,7 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                 isActive
-                  ? "bg-violet-600/10 font-medium text-violet-600"
+                  ? "bg-super-admin/10 font-medium text-super-admin"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >

@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { MapPin, Check, X, Globe, Shield, Loader2 } from "@/lib/icons";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface GlobalSpotRow {
   id: number;
@@ -97,12 +98,10 @@ export function SpotsClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Spots</h1>
-        <p className="text-muted-foreground text-sm">
-          Vincule sua escola aos spots disponíveis
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Spots"
+        subtitle="Vincule sua escola aos spots disponíveis"
+      />
 
       {globalSpots.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">

@@ -208,6 +208,7 @@ model sessions {
   end_time           String?   @db.VarChar(5)
   status             String    @db.VarChar(50) // scheduled | confirmed | completed | cancelled | cancelled_weather | cancelled_student
   type               String?   @db.VarChar(100) // aula avulsa, pacote, etc.
+  booking_source     String    @default("student") @db.VarChar(20) // student | admin
   notes              String?   @db.Text
   weather            Json?
   created_at         DateTime  @default(now()) @db.Timestamp(0)

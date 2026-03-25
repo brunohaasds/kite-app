@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { StatusKey } from "@/lib/styles/status-colors";
-import { formatTime, whatsappLink } from "@/lib/utils";
+import { cn, formatCurrency, formatTime, whatsappLink } from "@/lib/utils";
 import {
   Calendar,
   Clock,
@@ -26,12 +26,26 @@ import {
   X,
   Loader2,
   ChevronRight,
+  ChevronDown,
   ArrowLeft,
   Trash2,
+  UserPlus,
 } from "@/lib/icons";
 import { toast } from "sonner";
 import Link from "next/link";
 import { buildWeekDays } from "@/lib/date-utils";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SessionRow {
   uuid: string;
@@ -41,10 +55,18 @@ interface SessionRow {
   status: string;
   type: string | null;
   notes: string | null;
+  /** Quem marcou: aluno (app) ou admin (painel). */
+  bookingSource: string;
   studentName: string;
   studentPhone: string;
   instructorName: string;
   spotName: string;
+}
+
+interface BookingStudentOption {
+  id: number;
+  name: string;
+  email: string;
 }
 
 interface AvailableSlot {
@@ -59,9 +81,15 @@ interface AgendaClientProps {
   sessions: SessionRow[];
   currentDate: string;
   availableSlots?: AvailableSlot[];
+  bookingStudents: BookingStudentOption[];
 }
 
-export function AgendaClient({ sessions: initialSessions, currentDate, availableSlots = [] }: AgendaClientProps) {
+export function AgendaClient({
+  sessions: initialSessions,
+  currentDate,
+  availableSlots = [],
+  bookingStudents,
+}: AgendaClientProps) {
   const router = useRouter();
   const [sessions, setSessions] = useState(initialSessions);
   const [slots, setSlots] = useState(availableSlots);
@@ -73,6 +101,169 @@ export function AgendaClient({ sessions: initialSessions, currentDate, available
   const [deleteSlotDialog, setDeleteSlotDialog] = useState<{ open: boolean; slot: AvailableSlot | null }>({ open: false, slot: null });
   const [loading, setLoading] = useState(false);
   const [deletingSlot, setDeletingSlot] = useState(false);
+  /** Nomes dos instrutores com painel expandido (vários ao mesmo tempo). */
+  const [openInstructors, setOpenInstructors] = useState<string[]>([]);
+
+  const [bookSlot, setBookSlot] = useState<AvailableSlot | null>(null);
+  const [bookStudentId, setBookStudentId] = useState("");
+  const [lessonType, setLessonType] = useState<
+    "avulsa" | "pacote_credito" | "pacote_novo"
+  >("avulsa");
+  const [studentPackageId, setStudentPackageId] = useState("");
+  const [newPackageId, setNewPackageId] = useState("");
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [studentPackagesOpt, setStudentPackagesOpt] = useState<
+    { id: number; title: string; sessionsRemaining: number }[]
+  >([]);
+  const [shopPackagesOpt, setShopPackagesOpt] = useState<
+    { id: number; title: string; price: number; sessionCount: number }[]
+  >([]);
+
+  const slotsByInstructor = useMemo(() => {
+    const map = new Map<string, AvailableSlot[]>();
+    for (const s of slots) {
+      const key = s.instructorName.trim() || "—";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+    return [...map.entries()].sort((a, b) =>
+      a[0].localeCompare(b[0], "pt-BR"),
+    );
+  }, [slots]);
+
+  useEffect(() => {
+    if (slotsByInstructor.length === 0) {
+      setOpenInstructors([]);
+      return;
+    }
+    setOpenInstructors((prev) => {
+      const valid = prev.filter((k) =>
+        slotsByInstructor.some(([n]) => n === k),
+      );
+      if (valid.length > 0) return valid;
+      return [slotsByInstructor[0][0]];
+    });
+  }, [currentDate, slotsByInstructor]);
+
+  useEffect(() => {
+    setSessions(initialSessions);
+  }, [initialSessions]);
+
+  useEffect(() => {
+    setSlots(availableSlots);
+  }, [availableSlots]);
+
+  useEffect(() => {
+    if (!bookSlot || !bookStudentId) {
+      setStudentPackagesOpt([]);
+      setShopPackagesOpt([]);
+      return;
+    }
+    let cancelled = false;
+    setOptionsLoading(true);
+    fetch(
+      `/api/admin/students/booking-options?studentId=${encodeURIComponent(bookStudentId)}`,
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
+        setStudentPackagesOpt(data.studentPackages ?? []);
+        setShopPackagesOpt(data.shopPackages ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Erro ao carregar pacotes");
+      })
+      .finally(() => {
+        if (!cancelled) setOptionsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookSlot, bookStudentId]);
+
+  function openBookModal(slot: AvailableSlot) {
+    setBookSlot(slot);
+    setLessonType("avulsa");
+    setStudentPackageId("");
+    setNewPackageId("");
+    setBookStudentId(
+      bookingStudents[0]?.id != null ? String(bookingStudents[0].id) : "",
+    );
+  }
+
+  function closeBookModal() {
+    setBookSlot(null);
+  }
+
+  async function handleAdminBook() {
+    if (!bookSlot || !bookStudentId) {
+      toast.error("Selecione o aluno");
+      return;
+    }
+    if (lessonType === "pacote_credito" && !studentPackageId) {
+      toast.error("Selecione um pacote com crédito");
+      return;
+    }
+    if (lessonType === "pacote_novo" && !newPackageId) {
+      toast.error("Selecione um pacote para venda");
+      return;
+    }
+
+    setBookingSubmitting(true);
+    try {
+      const body: {
+        slotId: number;
+        studentId: number;
+        lessonType: "avulsa" | "pacote_credito" | "pacote_novo";
+        studentPackageId?: number;
+        packageId?: number;
+      } = {
+        slotId: bookSlot.id,
+        studentId: Number(bookStudentId),
+        lessonType,
+      };
+      if (lessonType === "pacote_credito") {
+        body.studentPackageId = Number(studentPackageId);
+      }
+      if (lessonType === "pacote_novo") {
+        body.packageId = Number(newPackageId);
+      }
+
+      const res = await fetch("/api/admin/sessions/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Erro ao agendar",
+        );
+      }
+      toast.success("Aula agendada!");
+      const sid = bookSlot.id;
+      closeBookModal();
+      setSlots((prev) =>
+        prev.map((s) => (s.id === sid ? { ...s, booked: true } : s)),
+      );
+      router.refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao agendar");
+    } finally {
+      setBookingSubmitting(false);
+    }
+  }
+
+  function toggleInstructorSlots(name: string) {
+    setOpenInstructors((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+    );
+  }
 
   const weekDays = buildWeekDays(currentDate);
 
@@ -149,15 +340,17 @@ export function AgendaClient({ sessions: initialSessions, currentDate, available
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Agenda</h1>
-        <Button asChild>
-          <Link href="/admin/agenda/nova">
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Agenda
-          </Link>
-        </Button>
-      </div>
+      <AdminSchoolPageHeader
+        title="Agenda"
+        desktopEnd={
+          <Button asChild>
+            <Link href="/admin/agenda/nova">
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Agenda
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Day navigation */}
       <div className="flex items-center gap-1">
@@ -196,13 +389,27 @@ export function AgendaClient({ sessions: initialSessions, currentDate, available
           </p>
         </div>
       ) : (
-        <>
-          {activeSessions.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Pendentes ({activeSessions.length})
-              </h2>
-              {activeSessions.map((s) => (
+        <Tabs
+          defaultValue={
+            activeSessions.length > 0 ? "pendentes" : "finalizadas"
+          }
+          className="w-full"
+        >
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="pendentes">
+              Pendentes ({activeSessions.length})
+            </TabsTrigger>
+            <TabsTrigger value="finalizadas">
+              Finalizadas ({doneSessions.length})
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="pendentes" className="mt-4 space-y-3">
+            {activeSessions.length === 0 ? (
+              <div className="rounded-xl border border-dashed bg-muted/30 py-10 text-center text-sm text-muted-foreground">
+                Nenhuma aula pendente neste dia.
+              </div>
+            ) : (
+              activeSessions.map((s) => (
                 <SessionCard
                   key={s.uuid}
                   session={s}
@@ -213,63 +420,287 @@ export function AgendaClient({ sessions: initialSessions, currentDate, available
                     setConfirmDialog({ open: true, action: "cancel", session: s })
                   }
                 />
-              ))}
-            </section>
-          )}
-
-          {doneSessions.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Finalizadas ({doneSessions.length})
-              </h2>
-              {doneSessions.map((s) => (
+              ))
+            )}
+          </TabsContent>
+          <TabsContent value="finalizadas" className="mt-4 space-y-3">
+            {doneSessions.length === 0 ? (
+              <div className="rounded-xl border border-dashed bg-muted/30 py-10 text-center text-sm text-muted-foreground">
+                Nenhuma aula finalizada ou cancelada neste dia.
+              </div>
+            ) : (
+              doneSessions.map((s) => (
                 <SessionCard key={s.uuid} session={s} />
-              ))}
-            </section>
-          )}
-        </>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Available Slots */}
       {slots.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Horários Disponíveis ({slots.filter((s) => !s.booked).length} / {slots.length})
+            Horários disponíveis ({slots.filter((s) => !s.booked).length} /{" "}
+            {slots.length})
           </h2>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {slots.map((slot) => (
-              <div
-                key={slot.id}
-                className={`rounded-xl border bg-card p-3 shadow-sm flex items-center gap-3 ${slot.booked ? "opacity-50" : ""}`}
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
-                  <Clock className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">{slot.time}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {slot.instructorName}
-                    {slot.spotName && ` · ${slot.spotName}`}
-                  </p>
-                </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${slot.booked ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
-                  {slot.booked ? "Ocupado" : "Livre"}
-                </span>
-                {!slot.booked && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-destructive hover:bg-destructive/10"
-                    onClick={() => setDeleteSlotDialog({ open: true, slot })}
+          <div className="space-y-2">
+            {slotsByInstructor.map(([name, list]) => {
+              const livres = list.filter((s) => !s.booked).length;
+              const open = openInstructors.includes(name);
+              return (
+                <div
+                  key={name}
+                  className="overflow-hidden rounded-xl border bg-card shadow-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleInstructorSlots(name)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+                    aria-expanded={open}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium">{name}</span>
+                      <span className="ml-2 text-sm text-muted-foreground tabular-nums">
+                        ({livres}/{list.length})
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200",
+                        open && "rotate-180",
+                      )}
+                      aria-hidden
+                    />
+                  </button>
+                  {open ? (
+                    <div className="border-t bg-muted/20 px-3 pb-3 pt-2">
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {list.map((slot) => (
+                          <div
+                            key={slot.id}
+                            className={`flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm ${slot.booked ? "opacity-50" : ""}`}
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                              <Clock className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold">{slot.time}</p>
+                              {slot.spotName ? (
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {slot.spotName}
+                                </p>
+                              ) : null}
+                            </div>
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${slot.booked ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
+                            >
+                              {slot.booked ? "Ocupado" : "Livre"}
+                            </span>
+                            {!slot.booked && (
+                              <div className="flex shrink-0 items-center gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-primary hover:bg-primary/10"
+                                  title={
+                                    bookingStudents.length === 0
+                                      ? "Cadastre alunos na escola"
+                                      : "Agendar aluno"
+                                  }
+                                  disabled={bookingStudents.length === 0}
+                                  onClick={() => openBookModal(slot)}
+                                >
+                                  <UserPlus className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:bg-destructive/10"
+                                  onClick={() =>
+                                    setDeleteSlotDialog({ open: true, slot })
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
+
+      <Dialog
+        open={!!bookSlot}
+        onOpenChange={(open) => !open && !bookingSubmitting && closeBookModal()}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Agendar aluno</DialogTitle>
+            <DialogDescription>
+              {bookSlot ? (
+                <>
+                  Horário {bookSlot.time}
+                  {bookSlot.instructorName
+                    ? ` · ${bookSlot.instructorName}`
+                    : ""}
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+
+          {bookingStudents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Não há alunos cadastrados nesta escola. Cadastre alunos em Alunos.
+            </p>
+          ) : (
+            <div className="space-y-4 py-1">
+              <div className="space-y-2">
+                <Label htmlFor="book-student">Aluno</Label>
+                <Select
+                  value={bookStudentId}
+                  onValueChange={setBookStudentId}
+                >
+                  <SelectTrigger id="book-student">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bookingStudents.map((s) => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.name} — {s.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {optionsLoading && bookStudentId ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Carregando pacotes…
+                </div>
+              ) : null}
+
+              <div className="space-y-3">
+                <Label>Tipo de aula</Label>
+                <RadioGroup
+                  value={lessonType}
+                  onValueChange={(v) => {
+                    setLessonType(
+                      v as "avulsa" | "pacote_credito" | "pacote_novo",
+                    );
+                    setStudentPackageId("");
+                    setNewPackageId("");
+                  }}
+                  className="gap-2"
+                >
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value="avulsa" id="lt-avulsa" />
+                    Aula avulsa
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value="pacote_credito" id="lt-cred" />
+                    Usar crédito de pacote existente
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value="pacote_novo" id="lt-novo" />
+                    Comprar pacote novo (cobra 1 aula ao agendar)
+                  </label>
+                </RadioGroup>
+              </div>
+
+              {lessonType === "pacote_credito" && bookStudentId && (
+                <div className="space-y-2">
+                  <Label>Pacote com crédito</Label>
+                  {studentPackagesOpt.length === 0 ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      Nenhum pacote ativo com créditos.
+                    </p>
+                  ) : (
+                    <Select
+                      value={studentPackageId}
+                      onValueChange={setStudentPackageId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o pacote" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {studentPackagesOpt.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.title} ({p.sessionsRemaining} restantes)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {lessonType === "pacote_novo" && bookStudentId && (
+                <div className="space-y-2">
+                  <Label>Pacote à venda</Label>
+                  {shopPackagesOpt.length === 0 ? (
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      Nenhum pacote ativo cadastrado.
+                    </p>
+                  ) : (
+                    <Select
+                      value={newPackageId}
+                      onValueChange={setNewPackageId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o pacote" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shopPackagesOpt.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.title} · {p.sessionCount} aulas ·{" "}
+                            {formatCurrency(p.price)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={closeBookModal}
+              disabled={bookingSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleAdminBook}
+              disabled={
+                bookingSubmitting ||
+                bookingStudents.length === 0 ||
+                !bookStudentId ||
+                (lessonType === "pacote_credito" &&
+                  (!studentPackageId || studentPackagesOpt.length === 0)) ||
+                (lessonType === "pacote_novo" &&
+                  (!newPackageId || shopPackagesOpt.length === 0))
+              }
+            >
+              {bookingSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirmar agendamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Slot Confirmation */}
       <Dialog
@@ -366,6 +797,11 @@ function SessionCard({
               {session.endTime && ` – ${formatTime(session.endTime)}`}
             </span>
             <StatusBadge status={session.status as StatusKey} />
+            {session.bookingSource === "admin" && (
+              <Badge variant="secondary" className="text-[10px] font-normal">
+                Pela escola
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-1 text-sm">

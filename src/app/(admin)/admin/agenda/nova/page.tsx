@@ -38,7 +38,6 @@ export default async function NovaAgendaPage() {
 
   const serializedAgendas = agendas.map((a) => ({
     uuid: a.uuid,
-    slug: a.slug,
     date: a.date.toISOString(),
     dayName: a.day_name,
     published: a.published,
@@ -47,6 +46,7 @@ export default async function NovaAgendaPage() {
 
   return (
     <NovaAgendaClient
+      organizationId={orgId}
       instructors={serializedInstructors}
       spots={serializedSpots}
       existingAgendas={serializedAgendas}

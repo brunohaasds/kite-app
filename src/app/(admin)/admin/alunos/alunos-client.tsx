@@ -34,6 +34,7 @@ import {
 } from "@/lib/icons";
 import { whatsappLink } from "@/lib/utils";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface StudentRow {
   uuid: string;
@@ -138,13 +139,10 @@ export function AlunosClient({ students }: { students: StudentRow[] }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Alunos</h1>
-        <p className="text-muted-foreground text-sm">
-          {students.length} aluno{students.length !== 1 && "s"} cadastrado
-          {students.length !== 1 && "s"}
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Alunos"
+        subtitle={`${students.length} aluno${students.length !== 1 ? "s" : ""} cadastrado${students.length !== 1 ? "s" : ""}`}
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

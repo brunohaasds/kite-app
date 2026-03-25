@@ -18,6 +18,7 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Award, X } from "@/lib/icons";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface InstructorExtras {
   certifications?: string[];
@@ -202,18 +203,16 @@ export function InstrutoresClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Instrutores</h1>
-          <p className="text-muted-foreground text-sm">
-            {instructors.length} instrutor{instructors.length !== 1 && "es"}
-          </p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo
-        </Button>
-      </div>
+      <AdminSchoolPageHeader
+        title="Instrutores"
+        subtitle={`${instructors.length} instrutor${instructors.length !== 1 ? "es" : ""}`}
+        desktopEnd={
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo
+          </Button>
+        }
+      />
 
       {instructors.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">

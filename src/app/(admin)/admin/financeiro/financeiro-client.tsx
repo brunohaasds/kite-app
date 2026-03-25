@@ -31,6 +31,7 @@ import {
   AlertTriangle,
 } from "@/lib/icons";
 import { toast } from "sonner";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface PaymentRow {
   uuid: string;
@@ -123,12 +124,10 @@ export function FinanceiroClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Financeiro</h1>
-        <p className="text-muted-foreground text-sm">
-          Gestão de pagamentos e cobranças
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Financeiro"
+        subtitle="Gestão de pagamentos e cobranças"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

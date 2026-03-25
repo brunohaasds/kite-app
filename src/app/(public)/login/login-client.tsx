@@ -56,7 +56,7 @@ export default function LoginClient() {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <Wind className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold">Kite App</h1>
+          <h1 className="text-2xl font-bold tracking-tight">eKite</h1>
           <p className="text-sm text-muted-foreground">
             Gestão de escolas de kitesurf
           </p>

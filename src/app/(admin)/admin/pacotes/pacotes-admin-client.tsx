@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Package, Users, Calendar, Trash2, Loader2 } from "@/lib/icons";
 import { toast } from "sonner";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface PackageRow {
   uuid: string;
@@ -163,18 +164,16 @@ export function PacotesAdminClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Pacotes</h1>
-          <p className="text-muted-foreground text-sm">
-            Gerencie os pacotes de aulas
-          </p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Pacote
-        </Button>
-      </div>
+      <AdminSchoolPageHeader
+        title="Pacotes"
+        subtitle="Gerencie os pacotes de aulas"
+        desktopEnd={
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Pacote
+          </Button>
+        }
+      />
 
       {packages.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">

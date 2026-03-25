@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Plus, Check, Clock, Loader2, Copy } from "@/lib/icons";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface InviteRow {
   id: number;
@@ -99,12 +100,10 @@ export function ConvitesClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Convites</h1>
-        <p className="text-muted-foreground text-sm">
-          Envie convites por email para novos alunos
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Convites"
+        subtitle="Envie convites por email para novos alunos"
+      />
 
       <form
         onSubmit={handleSend}

@@ -186,6 +186,16 @@ async function main() {
     },
   });
 
+  const providerFilme = await prisma.users.create({
+    data: {
+      name: "Bruno Filmes",
+      email: "filmes@kiteapp.com",
+      phone: "5585999300002",
+      password: PASSWORD,
+      role: "service_provider",
+    },
+  });
+
   // ── Members (user ↔ org) ──────────────────────────────────
   await prisma.members.createMany({
     data: [
@@ -201,6 +211,7 @@ async function main() {
       { organization_id: org1.id, user_id: providerUser.id },
       { organization_id: org2.id, user_id: adminUser.id },
       { organization_id: org2.id, user_id: instructorRafael.id },
+      { organization_id: org2.id, user_id: providerFilme.id },
     ],
   });
 
@@ -228,6 +239,34 @@ async function main() {
         scope_type: "global_spot",
         organization_id: null,
         global_spot_id: gPrea.id,
+      },
+    ],
+  });
+
+  const svcFilme = await prisma.services.create({
+    data: {
+      user_id: providerFilme.id,
+      type: "filmmaker",
+      display_name: "Bruno — Vídeo de kite",
+      bio: "Edição rápida e entrega no mesmo dia (quando der vento).",
+      whatsapp: "5585999300002",
+      instagram: "brunokitefilmes",
+      is_active: true,
+    },
+  });
+  await prisma.service_scope.createMany({
+    data: [
+      {
+        service_id: svcFilme.id,
+        scope_type: "organization",
+        organization_id: org2.id,
+        global_spot_id: null,
+      },
+      {
+        service_id: svcFilme.id,
+        scope_type: "global_spot",
+        organization_id: null,
+        global_spot_id: gJeri.id,
       },
     ],
   });
@@ -478,17 +517,67 @@ async function main() {
     ],
   });
 
+  // ── Service bookings (demo: statuses + add-on com session) ─
+  const mariaConfirmedLesson = await prisma.sessions.findFirst({
+    where: {
+      student_id: stuMaria.id,
+      organization_id: org1.id,
+      deleted_at: null,
+      status: "confirmed",
+    },
+    orderBy: { date: "asc" },
+  });
+
+  await prisma.service_bookings.createMany({
+    data: [
+      {
+        service_id: svcPhoto.id,
+        student_id: stuMaria.id,
+        session_id: mariaConfirmedLesson?.id ?? null,
+        status: "requested",
+        notes: "Fotos na água na próxima aula, se der.",
+      },
+      {
+        service_id: svcPhoto.id,
+        student_id: stuPedro.id,
+        session_id: null,
+        status: "confirmed",
+        quote_amount: 250,
+        notes: "Sessão na praia — combinado no WhatsApp.",
+      },
+      {
+        service_id: svcPhoto.id,
+        student_id: stuAna.id,
+        session_id: null,
+        status: "cancelled",
+        notes: "Desistiu antes de combinar valor.",
+      },
+      {
+        service_id: svcFilme.id,
+        student_id: stuPedro.id,
+        session_id: null,
+        status: "requested",
+        notes: "Quero um reel de 30s com as manobras.",
+      },
+    ],
+  });
+
   console.log("Seed completed successfully!");
   console.log(`  Organizations: ${org1.name}, ${org2.name}, ${org3.name}`);
   console.log(
     `  Global spots: ${gPrea.slug}, ${gJeri.slug}, ${gTramandai.slug} (públicos)`,
   );
   console.log(`  Spots: ${spotPrea.name}, ${spotJeri.name}, ${spotTramandai.name}`);
-  console.log(`  Users: superadmin + admin + 4 instructors + 3 students + 1 service_provider (fotografo@kiteapp.com)`);
+  console.log(
+    `  Users: superadmin + admin + 4 instructors + 3 students + 2 service_provider (fotografo@kiteapp.com, filmes@kiteapp.com)`,
+  );
   console.log(`  Packages: 5`);
   console.log(`  Sessions: 6`);
   console.log(`  Agendas: 2 (with 8 slots)`);
   console.log(`  Payments: 4`);
+  console.log(
+    `  Service bookings: 4 (Lucas: 1 pendente c/ aula, 1 confirmado, 1 cancelado; Bruno: 1 pendente)`,
+  );
 }
 
 main()

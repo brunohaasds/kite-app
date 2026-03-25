@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const spot = await findBySlug(slug);
   if (!spot) return { title: "Spot não encontrado" };
-  return { title: `${spot.name} - Kite App` };
+  return { title: spot.name };
 }
 
 export default async function SpotPage({ params }: Props) {

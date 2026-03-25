@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin, Plus, Pencil, Trash2, Loader2, Globe, Shield } from "@/lib/icons";
+import {
+  MapPin,
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Globe,
+  Shield,
+  Eye,
+  Search,
+} from "@/lib/icons";
 import { ImageUpload } from "@/components/shared/image-upload";
 
 interface SpotRow {
@@ -99,6 +110,22 @@ export function SpotsClient({
   const [loading, setLoading] = useState(false);
   const [newTip, setNewTip] = useState("");
   const [newService, setNewService] = useState("");
+  const [search, setSearch] = useState("");
+
+  const filteredSpots = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return initial;
+    return initial.filter((s) => {
+      const parts = [
+        s.name,
+        s.slug,
+        s.owner_organization?.name ?? "",
+        s.parent_spot?.name ?? "",
+        s.parent_spot?.slug ?? "",
+      ];
+      return parts.some((p) => p.toLowerCase().includes(q));
+    });
+  }, [initial, search]);
 
   function openCreate() {
     setEditingId(null);
@@ -199,17 +226,17 @@ export function SpotsClient({
     }
   }
 
-  const parentSpots = initial.filter((s) => !s.parent_spot_id);
-  const childSpots = initial.filter((s) => s.parent_spot_id);
+  const parentSpots = filteredSpots.filter((s) => !s.parent_spot_id);
+  const childSpots = filteredSpots.filter((s) => s.parent_spot_id);
 
   function renderSpotCard(spot: SpotRow, indented = false) {
     return (
       <div
         key={spot.uuid}
-        className={`rounded-xl border bg-card p-4 shadow-sm ${indented ? "ml-8 border-l-4 border-l-violet-200" : ""}`}
+        className={`rounded-xl border bg-card p-4 shadow-sm ${indented ? "ml-8 border-l-4 border-l-super-admin/35" : ""}`}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-600 shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-super-admin/10 text-super-admin shrink-0">
             <MapPin className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
@@ -243,10 +270,17 @@ export function SpotsClient({
             </p>
           </div>
           <div className="flex gap-1 shrink-0">
+            <Button variant="ghost" size="icon" asChild title="Ver página pública do spot">
+              <Link href={`/spot/${spot.slug}`} target="_blank" rel="noopener noreferrer">
+                <Eye className="h-4 w-4" />
+                <span className="sr-only">Ver página pública</span>
+              </Link>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => openEdit(spot)}
+              title="Editar"
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -282,12 +316,32 @@ export function SpotsClient({
         </Button>
       </div>
 
+      {initial.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, slug, escola dona ou spot pai..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {initial.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
           <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="text-lg font-medium">Nenhum spot cadastrado</h3>
           <p className="text-muted-foreground text-sm mt-1">
             Crie o primeiro spot global.
+          </p>
+        </div>
+      ) : filteredSpots.length === 0 ? (
+        <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
+          <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Nenhum spot encontrado</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tente outro termo de busca.
           </p>
         </div>
       ) : (

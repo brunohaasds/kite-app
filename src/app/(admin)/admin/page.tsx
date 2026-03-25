@@ -6,7 +6,22 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Users, Award, Calendar, DollarSign } from "@/lib/icons";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
+import {
+  Users,
+  Award,
+  Calendar,
+  DollarSign,
+  Plus,
+  Mail,
+  Globe,
+} from "@/lib/icons";
+
+const quickActionClass =
+  "group flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+const quickActionIconClass =
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/15";
 
 export const metadata: Metadata = {
   title: "Dashboard - Admin",
@@ -83,15 +98,20 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <Link
-          href="/admin/escola"
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {schoolName}
-        </Link>
-      </div>
+      <AdminSchoolPageHeader
+        title="Dashboard"
+        subtitle={schoolName}
+        subtitleMobileOnly
+        desktopEndDesktopOnly
+        desktopEnd={
+          <Link
+            href="/admin/escola"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {schoolName}
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border bg-card p-4 shadow-sm">
@@ -143,20 +163,51 @@ export default async function AdminDashboardPage() {
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Ações Rápidas</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <Button asChild variant="outline" className="h-auto justify-center py-3">
-            <Link href="/admin/agenda/nova">Nova Agenda</Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto justify-center py-3">
-            <Link href="/admin/alunos">Ver Alunos</Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto justify-center py-3">
-            <Link href="/admin/agenda">Ver Agenda</Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto justify-center py-3">
-            <Link href="/admin/financeiro">Financeiro</Link>
-          </Button>
+        <h2 className="text-lg font-semibold">Ações rápidas</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link href="/admin/agenda/nova" className={quickActionClass}>
+            <span className={quickActionIconClass}>
+              <Plus className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">Nova agenda</span>
+          </Link>
+          <Link href="/admin/alunos" className={quickActionClass}>
+            <span className={quickActionIconClass}>
+              <Users className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">Ver alunos</span>
+          </Link>
+          <Link href="/admin/agenda" className={quickActionClass}>
+            <span className={quickActionIconClass}>
+              <Calendar className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">Ver agenda</span>
+          </Link>
+          <Link href="/admin/financeiro" className={quickActionClass}>
+            <span className={quickActionIconClass}>
+              <DollarSign className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">Financeiro</span>
+          </Link>
+          <Link href="/admin/convites" className={quickActionClass}>
+            <span className={quickActionIconClass}>
+              <Mail className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">Ver convites</span>
+          </Link>
+          <Link
+            href={`/escola/${organizationId}`}
+            className={quickActionClass}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className={quickActionIconClass}>
+              <Globe className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="text-left font-medium leading-snug">
+              Ver página da escola
+            </span>
+          </Link>
         </div>
       </section>
     </div>

@@ -10,6 +10,36 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+/**
+ * Detecta singleton do Prisma gerado antes de `prisma generate` (HMR / reload sem restart):
+ * delegates como `services` ou `global_spots` podem faltar no objeto antigo.
+ * Se remover `services` do schema no futuro, troque o último teste por outro modelo “recente”.
+ */
+function isPrismaClientHealthy(client: PrismaClient): boolean {
+  const c = client as unknown as Record<
+    string,
+    { count?: unknown; findFirst?: unknown } | undefined
+  >;
+  return (
+    typeof c.organizations?.count === "function" &&
+    typeof c.global_spots?.count === "function" &&
+    typeof c.services?.findFirst === "function"
+  );
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+function getPrisma(): PrismaClient {
+  const existing = globalForPrisma.prisma;
+  if (existing && isPrismaClientHealthy(existing)) {
+    return existing;
+  }
+  if (existing) {
+    void existing.$disconnect().catch(() => {
+      /* ignore */
+    });
+  }
+  const client = createPrismaClient();
+  globalForPrisma.prisma = client;
+  return client;
+}
+
+export const prisma = getPrisma();

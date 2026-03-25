@@ -613,30 +613,36 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
 /* ----- Sub-components ----- */
 
 function ProgressBar({ step }: { step: number }) {
+  const circleClass = (i: number) =>
+    `flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+      i < step
+        ? "bg-green-500 text-white"
+        : i === step
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground"
+    }`;
+
   return (
-    <div className="flex items-center justify-between">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex flex-1 items-center">
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
-              i < step
-                ? "bg-green-500 text-white"
-                : i === step
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {i < step ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
-          </div>
-          {i < 2 && (
-            <div
-              className={`mx-2 h-1 flex-1 rounded transition-colors ${
-                i < step ? "bg-primary" : "bg-border"
-              }`}
-            />
-          )}
-        </div>
-      ))}
+    <div className="mx-auto flex w-full max-w-md items-center justify-center">
+      <div className={circleClass(0)}>
+        {0 < step ? <CheckCircle2 className="h-5 w-5" /> : 1}
+      </div>
+      <div
+        className={`mx-2 h-1 min-w-[1.5rem] flex-1 rounded transition-colors ${
+          step >= 1 ? "bg-primary" : "bg-border"
+        }`}
+      />
+      <div className={circleClass(1)}>
+        {1 < step ? <CheckCircle2 className="h-5 w-5" /> : 2}
+      </div>
+      <div
+        className={`mx-2 h-1 min-w-[1.5rem] flex-1 rounded transition-colors ${
+          step >= 2 ? "bg-primary" : "bg-border"
+        }`}
+      />
+      <div className={circleClass(2)}>
+        {2 < step ? <CheckCircle2 className="h-5 w-5" /> : 3}
+      </div>
     </div>
   );
 }

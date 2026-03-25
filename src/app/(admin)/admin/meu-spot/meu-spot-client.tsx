@@ -31,6 +31,7 @@ import {
   Shield,
 } from "@/lib/icons";
 import { ImageUpload } from "@/components/shared/image-upload";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface SpotData {
   id: number;
@@ -161,12 +162,10 @@ export function MeuSpotClient({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Meu Spot</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie as informações e acessos do seu spot
-        </p>
-      </div>
+      <AdminSchoolPageHeader
+        title="Meu Spot"
+        subtitle="Gerencie as informações e acessos do seu spot"
+      />
 
       {/* Section 1: Spot Info */}
       <section className="rounded-xl border bg-card p-6 shadow-sm space-y-6">

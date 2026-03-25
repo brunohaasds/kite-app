@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Escola de Kitesurf — Kite App",
+  title: "Escola de kitesurf",
   description:
     "Escola de kitesurf com instrutores certificados. Agende sua aula agora.",
   openGraph: {
-    title: "Escola de Kitesurf — Kite App",
+    title: "Escola de kitesurf",
     description: "Agende sua aula de kitesurf com instrutores certificados.",
     type: "website",
   },

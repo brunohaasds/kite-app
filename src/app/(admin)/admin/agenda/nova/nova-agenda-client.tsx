@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, Copy, Check, Calendar, Clock, Loader2, MapPin, Pencil } from "@/lib/icons";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Copy,
+  Check,
+  Calendar,
+  Clock,
+  Loader2,
+  Eye,
+} from "@/lib/icons";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
@@ -23,6 +39,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
+import { formatDateFromIso } from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
 
 interface Instructor {
   id: number;
@@ -38,7 +57,6 @@ interface Spot {
 
 interface ExistingAgenda {
   uuid: string;
-  slug: string;
   date: string;
   dayName: string;
   published: boolean;
@@ -52,7 +70,15 @@ interface SlotItem {
   spotId: string;
 }
 
-type CreationMode = "auto" | "manual";
+type PreviewDateBlock = {
+  date: string;
+  dayName: string;
+  byInstructor: {
+    instructorId: number;
+    instructorName: string;
+    slots: SlotItem[];
+  }[];
+};
 
 const DAY_NAMES: Record<number, string> = {
   0: "Domingo",
@@ -72,43 +98,121 @@ const DURATION_OPTIONS = [
   { value: "180", label: "3 horas" },
 ];
 
+function dayNameFromIso(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return DAY_NAMES[d.getDay()] ?? "";
+}
+
+function generateSlotsForInstructor(
+  start: string,
+  durationMin: number,
+  lessons: number,
+  instructorId: string,
+  spotId: string,
+): SlotItem[] {
+  const [sh, sm] = start.split(":").map(Number);
+  let currentMin = sh * 60 + sm;
+  const slots: SlotItem[] = [];
+  for (let i = 0; i < lessons; i++) {
+    const hh = String(Math.floor(currentMin / 60)).padStart(2, "0");
+    const mm = String(currentMin % 60).padStart(2, "0");
+    slots.push({
+      id: crypto.randomUUID(),
+      time: `${hh}:${mm}`,
+      instructorId,
+      spotId,
+    });
+    currentMin += durationMin;
+  }
+  return slots;
+}
+
+function mergeSlotsForApi(block: PreviewDateBlock) {
+  const flat = block.byInstructor.flatMap((b) =>
+    b.slots.map((s) => ({
+      time: s.time,
+      instructorId: s.instructorId ? Number(s.instructorId) : null,
+      spotId: s.spotId ? Number(s.spotId) : null,
+    })),
+  );
+  flat.sort((a, b) => {
+    const c = a.time.localeCompare(b.time);
+    return c !== 0 ? c : (a.instructorId ?? 0) - (b.instructorId ?? 0);
+  });
+  return flat;
+}
+
 export function NovaAgendaClient({
+  organizationId,
   instructors,
   spots,
   existingAgendas,
 }: {
+  organizationId: number;
   instructors: Instructor[];
   spots: Spot[];
   existingAgendas: ExistingAgenda[];
 }) {
   const router = useRouter();
-  const [date, setDate] = useState("");
-  const [dayName, setDayName] = useState("");
-  const [mode, setMode] = useState<CreationMode>("auto");
-  const [slotsItems, setSlotsItems] = useState<SlotItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-  const [deleteAgenda, setDeleteAgenda] = useState<ExistingAgenda | null>(null);
-  const [deletingAgenda, setDeletingAgenda] = useState(false);
-
-  // Auto mode fields
+  const [dateRows, setDateRows] = useState<string[]>(() => {
+    const t = new Date();
+    return [t.toISOString().slice(0, 10)];
+  });
+  const [selectedInstructorIds, setSelectedInstructorIds] = useState<number[]>([]);
+  const [spotId, setSpotId] = useState("");
   const [autoStart, setAutoStart] = useState("08:00");
   const [autoLessons, setAutoLessons] = useState("4");
   const [autoDuration, setAutoDuration] = useState("120");
-  const [autoInstructorId, setAutoInstructorId] = useState("");
-  const [autoSpotId, setAutoSpotId] = useState("");
+  const [preview, setPreview] = useState<PreviewDateBlock[] | null>(null);
+  const [previewTab, setPreviewTab] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [copiedAgendaUuid, setCopiedAgendaUuid] = useState<string | null>(null);
+  const [deleteAgenda, setDeleteAgenda] = useState<ExistingAgenda | null>(null);
+  const [deletingAgenda, setDeletingAgenda] = useState(false);
 
-  function handleDateChange(value: string) {
-    setDate(value);
-    if (value) {
-      const d = new Date(value + "T12:00:00");
-      setDayName(DAY_NAMES[d.getDay()] ?? "");
-    } else {
-      setDayName("");
-    }
+  const [viewDialog, setViewDialog] = useState<ExistingAgenda | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewSlots, setViewSlots] = useState<
+    {
+      time: string;
+      instructorId: number | null;
+      instructorName: string;
+      spotName: string | null;
+    }[]
+  >([]);
+  const [viewTab, setViewTab] = useState<string>("");
+
+  function toggleInstructor(id: number) {
+    setSelectedInstructorIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   }
 
-  function generateAutoSlots() {
+  function addDateRow() {
+    setDateRows((prev) => [...prev, ""]);
+  }
+
+  function removeDateRow(index: number) {
+    setDateRows((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }
+
+  function setDateAt(index: number, value: string) {
+    setDateRows((prev) => prev.map((d, i) => (i === index ? value : d)));
+  }
+
+  function generatePreview() {
+    const dates = dateRows.map((d) => d.trim()).filter(Boolean);
+    const uniqueDates = [...new Set(dates)].sort();
+
+    if (uniqueDates.length === 0) {
+      toast.error("Adicione pelo menos uma data");
+      return;
+    }
+    if (selectedInstructorIds.length === 0) {
+      toast.error("Selecione pelo menos um instrutor");
+      return;
+    }
+
     const lessons = Number(autoLessons);
     const duration = Number(autoDuration);
     if (lessons <= 0 || lessons > 20) {
@@ -120,92 +224,98 @@ export function NovaAgendaClient({
       return;
     }
 
-    const [sh, sm] = autoStart.split(":").map(Number);
-    let currentMin = sh * 60 + sm;
+    const instList = instructors.filter((i) => selectedInstructorIds.includes(i.id));
+    const spotStr = spotId;
 
-    const newSlots: SlotItem[] = [];
-    for (let i = 0; i < lessons; i++) {
-      const hh = String(Math.floor(currentMin / 60)).padStart(2, "0");
-      const mm = String(currentMin % 60).padStart(2, "0");
-      newSlots.push({
-        id: crypto.randomUUID(),
-        time: `${hh}:${mm}`,
-        instructorId: autoInstructorId,
-        spotId: autoSpotId,
-      });
-      currentMin += duration;
-    }
+    const blocks: PreviewDateBlock[] = uniqueDates.map((dateStr) => {
+      const dayName = dayNameFromIso(dateStr);
+      const byInstructor = instList.map((inst) => ({
+        instructorId: inst.id,
+        instructorName: inst.name,
+        slots: generateSlotsForInstructor(
+          autoStart,
+          duration,
+          lessons,
+          String(inst.id),
+          spotStr,
+        ),
+      }));
+      return { date: dateStr, dayName, byInstructor };
+    });
 
-    setSlotsItems(newSlots);
-    toast.success(`${newSlots.length} horários gerados`);
+    setPreview(blocks);
+    setPreviewTab(String(instList[0]?.id ?? ""));
+    toast.success("Pré-visualização gerada");
   }
 
-  function addManualSlot() {
-    setSlotsItems((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), time: "", instructorId: "", spotId: "" },
-    ]);
-  }
-
-  function removeSlot(id: string) {
-    setSlotsItems((prev) => prev.filter((s) => s.id !== id));
-  }
-
-  function updateSlot(id: string, field: keyof SlotItem, value: string) {
-    setSlotsItems((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
-    );
+  function endTimeForSlots(slots: SlotItem[], durationMin: number) {
+    if (slots.length === 0) return null;
+    const last = slots[slots.length - 1];
+    const [h, m] = last.time.split(":").map(Number);
+    const end = h * 60 + m + durationMin;
+    return `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
   }
 
   async function handlePublish() {
-    if (!date || !dayName || slotsItems.length === 0) {
-      toast.error("Preencha a data e adicione pelo menos um horário");
-      return;
-    }
-    const invalid = slotsItems.filter((s) => !s.time);
-    if (invalid.length > 0) {
-      toast.error("Todos os horários devem estar preenchidos");
+    if (!preview || preview.length === 0) {
+      toast.error("Gere a pré-visualização primeiro");
       return;
     }
 
     setLoading(true);
-    try {
-      const res = await fetch("/api/admin/agendas/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date,
-          dayName,
-          slots: slotsItems.map((s) => ({
-            time: s.time,
-            instructorId: s.instructorId ? Number(s.instructorId) : null,
-            spotId: s.spotId ? Number(s.spotId) : null,
-          })),
-        }),
-      });
+    let ok = 0;
+    const fails: string[] = [];
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erro ao criar agenda");
+    try {
+      for (const block of preview) {
+        const slots = mergeSlotsForApi(block);
+        try {
+          const res = await fetch("/api/admin/agendas/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              date: block.date,
+              dayName: block.dayName,
+              slots,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(
+              typeof data.error === "string" ? data.error : "Erro ao criar agenda",
+            );
+          }
+          ok++;
+        } catch (e) {
+          fails.push(
+            `${block.date}: ${e instanceof Error ? e.message : "Erro"}`,
+          );
+        }
       }
 
-      toast.success("Agenda publicada!");
-      router.refresh();
-      setDate("");
-      setDayName("");
-      setSlotsItems([]);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar agenda");
+      if (ok > 0) {
+        toast.success(
+          ok === 1
+            ? "1 agenda publicada"
+            : `${ok} agendas publicadas`,
+        );
+        setPreview(null);
+        router.refresh();
+      }
+      if (fails.length > 0) {
+        toast.error(fails.join(" · "));
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  async function copySlug(slug: string) {
-    await navigator.clipboard.writeText(slug);
-    setCopiedSlug(slug);
-    toast.success("Slug copiado!");
-    setTimeout(() => setCopiedSlug(null), 2000);
+  async function copyPublicAgendaUrl(agenda: ExistingAgenda) {
+    const url = `${window.location.origin}/escola/${organizationId}/agenda`;
+    await navigator.clipboard.writeText(url);
+    setCopiedAgendaUuid(agenda.uuid);
+    toast.success("Link da agenda copiado!");
+    setTimeout(() => setCopiedAgendaUuid(null), 2000);
   }
 
   async function handleDeleteAgenda() {
@@ -228,257 +338,345 @@ export function NovaAgendaClient({
     }
   }
 
-  const endTime = slotsItems.length > 0
-    ? (() => {
-        const last = slotsItems[slotsItems.length - 1];
-        const [h, m] = last.time.split(":").map(Number);
-        const end = h * 60 + m + Number(autoDuration);
-        return `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
-      })()
-    : null;
+  async function openViewAgenda(a: ExistingAgenda) {
+    setViewDialog(a);
+    setViewLoading(true);
+    setViewSlots([]);
+    try {
+      const res = await fetch(`/api/admin/agendas/detail?uuid=${encodeURIComponent(a.uuid)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro");
+      const slots = data.slots as {
+        time: string;
+        instructorId: number | null;
+        instructorName: string;
+        spotName: string | null;
+      }[];
+      setViewSlots(slots);
+      const ids = [...new Set(slots.map((s) => s.instructorId ?? -1))];
+      setViewTab(String(ids[0] ?? ""));
+    } catch {
+      toast.error("Não foi possível carregar a agenda");
+      setViewDialog(null);
+    } finally {
+      setViewLoading(false);
+    }
+  }
+
+  const viewGroups = useMemo(() => {
+    const m = new Map<
+      number,
+      { name: string; rows: { time: string; spotName: string | null }[] }
+    >();
+    for (const s of viewSlots) {
+      const key = s.instructorId ?? -1;
+      if (!m.has(key)) {
+        m.set(key, { name: s.instructorName, rows: [] });
+      }
+      m.get(key)!.rows.push({ time: s.time, spotName: s.spotName });
+    }
+    return [...m.entries()].sort((a, b) =>
+      a[1].name.localeCompare(b[1].name, "pt-BR"),
+    );
+  }, [viewSlots]);
+
+  const previewInstructors = preview?.[0]?.byInstructor ?? [];
+
+  const durationMin = Number(autoDuration);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/agenda">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">Nova Agenda</h1>
-      </div>
+      <AdminSchoolPageHeader
+        title="Nova Agenda"
+        subtitle="Grade automática (uma ou mais datas e instrutores)"
+        start={
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin/agenda">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+        }
+      />
 
-      <div className="rounded-xl border bg-card p-6 shadow-sm space-y-5">
-        {/* Date */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="date">Data</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => handleDateChange(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Dia da semana</Label>
-            <Input value={dayName} disabled placeholder="Selecione a data" />
-          </div>
+      <div className="rounded-xl border bg-card p-6 shadow-sm space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold">Definição da grade</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Escolha as datas, os instrutores (cada um recebe a mesma sequência de horários),
+            início e duração única para toda a grade, e quantidade de aulas.
+          </p>
         </div>
 
-        {/* Mode Selector */}
-        <div className="flex gap-2">
-          <Button
-            variant={mode === "auto" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("auto")}
-          >
-            Grade Automática
-          </Button>
-          <Button
-            variant={mode === "manual" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("manual")}
-          >
-            Manual
-          </Button>
-        </div>
-
-        {mode === "auto" ? (
-          <div className="space-y-4 rounded-lg border border-dashed p-4">
-            <p className="text-sm text-muted-foreground">
-              Defina quantidade, duração e horário de início para gerar a grade automaticamente.
-            </p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="space-y-1">
-                <Label className="text-xs">Nº de aulas</Label>
+        {/* Datas dentro da grade */}
+        <div className="space-y-3">
+          <Label>Datas</Label>
+          <div className="space-y-2">
+            {dateRows.map((d, index) => (
+              <div key={index} className="flex flex-wrap items-center gap-2">
                 <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={autoLessons}
-                  onChange={(e) => setAutoLessons(e.target.value)}
+                  type="date"
+                  className="w-[calc(100%-3rem)] min-w-[200px] sm:max-w-xs"
+                  value={d}
+                  onChange={(e) => setDateAt(index, e.target.value)}
                 />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Duração</Label>
-                <Select value={autoDuration} onValueChange={setAutoDuration}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DURATION_OPTIONS.map((d) => (
-                      <SelectItem key={d.value} value={d.value}>
-                        {d.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Início</Label>
-                <Input
-                  type="time"
-                  value={autoStart}
-                  onChange={(e) => setAutoStart(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Instrutor</Label>
-                <Select value={autoInstructorId} onValueChange={setAutoInstructorId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Opcional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {instructors.map((i) => (
-                      <SelectItem key={i.id} value={String(i.id)}>
-                        {i.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {spots.length > 0 && (
-              <div className="space-y-1">
-                <Label className="text-xs">Spot</Label>
-                <Select value={autoSpotId} onValueChange={setAutoSpotId}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Opcional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {spots.map((s) => (
-                      <SelectItem key={s.id} value={String(s.id)}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <Button onClick={generateAutoSlots} className="w-full">
-              Gerar Grade
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <Button variant="outline" size="sm" onClick={addManualSlot}>
-              <Plus className="mr-1 h-4 w-4" />
-              Adicionar Horário
-            </Button>
-          </div>
-        )}
-
-        {/* Slot Preview / Editor */}
-        {slotsItems.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Horários ({slotsItems.length})</Label>
-                {endTime && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {slotsItems[0].time} – {endTime}
-                  </p>
-                )}
-              </div>
-              {mode === "auto" && (
-                <Button variant="outline" size="sm" onClick={addManualSlot}>
-                  <Plus className="mr-1 h-4 w-4" />
-                  Adicionar
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-              {slotsItems.map((slot) => (
-                <div key={slot.id} className="flex items-center gap-2 rounded-lg border p-2">
-                  <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Input
-                    type="time"
-                    value={slot.time}
-                    onChange={(e) => updateSlot(slot.id, "time", e.target.value)}
-                    className="w-24"
-                  />
-                  <Select
-                    value={slot.instructorId}
-                    onValueChange={(v) => updateSlot(slot.id, "instructorId", v)}
-                  >
-                    <SelectTrigger className="flex-1 min-w-0">
-                      <SelectValue placeholder="Instrutor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {instructors.map((i) => (
-                        <SelectItem key={i.id} value={String(i.id)}>
-                          {i.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {spots.length > 0 && (
-                    <Select
-                      value={slot.spotId}
-                      onValueChange={(v) => updateSlot(slot.id, "spotId", v)}
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue placeholder="Spot" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {spots.map((s) => (
-                          <SelectItem key={s.id} value={String(s.id)}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                {dateRows.length > 1 && (
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeSlot(slot.id)}
                     className="text-destructive shrink-0"
+                    onClick={() => removeDateRow(index)}
+                    aria-label="Remover data"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={addDateRow}>
+            <Plus className="mr-1 h-4 w-4" />
+            Adicionar outra data
+          </Button>
+        </div>
+
+        {/* Instrutores multi */}
+        <div className="space-y-2">
+          <Label>Instrutores</Label>
+          <p className="text-xs text-muted-foreground">
+            Será gerada uma grade idêntica para cada instrutor selecionado.
+          </p>
+          {instructors.length === 0 ? (
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              Cadastre instrutores antes de criar agendas.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {instructors.map((i) => (
+                <button
+                  key={i.id}
+                  type="button"
+                  onClick={() => toggleInstructor(i.id)}
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-sm transition-colors",
+                    selectedInstructorIds.includes(i.id)
+                      ? "border-primary bg-primary/10 font-medium text-primary"
+                      : "border-border bg-background hover:bg-accent",
+                  )}
+                >
+                  {i.name}
+                </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        <Button onClick={handlePublish} disabled={loading || slotsItems.length === 0} className="w-full">
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Publicar Agenda
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-2">
+            <Label htmlFor="lessons">Nº de aulas</Label>
+            <Input
+              id="lessons"
+              type="number"
+              min={1}
+              max={20}
+              value={autoLessons}
+              onChange={(e) => setAutoLessons(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Duração (toda a grade)</Label>
+            <Select value={autoDuration} onValueChange={setAutoDuration}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATION_OPTIONS.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="start">Início</Label>
+            <Input
+              id="start"
+              type="time"
+              value={autoStart}
+              onChange={(e) => setAutoStart(e.target.value)}
+            />
+          </div>
+          {spots.length > 0 && (
+            <div className="space-y-2">
+              <Label>Spot (opcional)</Label>
+              <Select value={spotId || "__none__"} onValueChange={(v) => setSpotId(v === "__none__" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  {spots.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        <Button
+          type="button"
+          className="w-full"
+          onClick={generatePreview}
+          disabled={instructors.length === 0}
+        >
+          Gerar pré-visualização
         </Button>
       </div>
+
+      {/* Pré-visualização com tabs por instrutor */}
+      {preview && preview.length > 0 && previewInstructors.length > 0 && (
+        <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Pré-visualização</h2>
+              <p className="text-sm text-muted-foreground">
+                {preview.length} dia{preview.length !== 1 ? "s" : ""} ·{" "}
+                {previewInstructors.length} instrutor
+                {previewInstructors.length !== 1 ? "es" : ""}
+              </p>
+            </div>
+          </div>
+
+          <Tabs value={previewTab} onValueChange={setPreviewTab}>
+            <TabsList className="w-full sm:w-auto">
+              {previewInstructors.map((i) => (
+                <TabsTrigger key={i.instructorId} value={String(i.instructorId)}>
+                  {i.instructorName}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {previewInstructors.map((i) => (
+              <TabsContent
+                key={i.instructorId}
+                value={String(i.instructorId)}
+                className="mt-4 space-y-4"
+              >
+                {preview.map((block) => {
+                  const row = block.byInstructor.find(
+                    (x) => x.instructorId === i.instructorId,
+                  );
+                  if (!row) return null;
+                  const end = endTimeForSlots(row.slots, durationMin);
+                  return (
+                    <div
+                      key={block.date}
+                      className="rounded-lg border border-dashed bg-muted/30 p-4"
+                    >
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {formatDateFromIso(block.date, {
+                            weekday: "short",
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          ({formatDateFromIso(block.date, { weekday: "long" })})
+                        </span>
+                      </div>
+                      {row.slots.length > 0 && end && (
+                        <p className="mb-1 text-xs text-muted-foreground">
+                          {row.slots[0].time} – {end} (fim estimado após último slot)
+                        </p>
+                      )}
+                      <ul className="space-y-1.5">
+                        {row.slots.map((slot) => (
+                          <li
+                            key={slot.id}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="font-mono tabular-nums">{slot.time}</span>
+                            {spots.length > 0 && slot.spotId && (
+                              <span className="text-muted-foreground">
+                                ·{" "}
+                                {spots.find((s) => String(s.id) === slot.spotId)?.name ??
+                                  "Spot"}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </TabsContent>
+            ))}
+          </Tabs>
+
+          <Button
+            className="w-full"
+            onClick={handlePublish}
+            disabled={loading}
+          >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Publicar {preview.length > 1 ? `${preview.length} agendas` : "agenda"}
+          </Button>
+        </div>
+      )}
 
       {existingAgendas.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">Agendas publicadas</h2>
+          <p className="text-sm text-muted-foreground">
+            Veja o resumo da grade por instrutor ou copie o link público da agenda.
+          </p>
           {existingAgendas.map((a) => (
             <div
               key={a.uuid}
-              className="rounded-xl border bg-card p-4 shadow-sm flex items-center justify-between gap-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm"
             >
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">
-                    {new Date(a.date).toLocaleDateString("pt-BR", {
+                    {formatDateFromIso(a.date, {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
                     })}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    ({a.dayName})
+                    ({formatDateFromIso(a.date, { weekday: "long" })})
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{a.slotCount} horários</span>
+                <div className="text-xs text-muted-foreground">
+                  {a.slotCount} horários
                 </div>
               </div>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => copySlug(a.slug)}>
-                  {copiedSlug === a.slug ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Ver grade"
+                  onClick={() => openViewAgenda(a)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Copiar link público da agenda"
+                  onClick={() => copyPublicAgendaUrl(a)}
+                >
+                  {copiedAgendaUuid === a.uuid ? (
                     <Check className="h-4 w-4 text-green-600" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -498,8 +696,10 @@ export function NovaAgendaClient({
         </div>
       )}
 
-      {/* Delete Agenda Confirmation */}
-      <Dialog open={!!deleteAgenda} onOpenChange={(open) => !deletingAgenda && !open && setDeleteAgenda(null)}>
+      <Dialog
+        open={!!deleteAgenda}
+        onOpenChange={(open) => !deletingAgenda && !open && setDeleteAgenda(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Excluir agenda</DialogTitle>
@@ -516,6 +716,61 @@ export function NovaAgendaClient({
               Excluir
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewDialog} onOpenChange={(open) => !open && setViewDialog(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Grade da agenda</DialogTitle>
+            {viewDialog && (
+              <DialogDescription className="flex flex-wrap items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                {formatDateFromIso(viewDialog.date, {
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          {viewLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : viewGroups.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum horário.</p>
+          ) : (
+            <Tabs value={viewTab} onValueChange={setViewTab}>
+              <TabsList className="w-full sm:w-auto">
+                {viewGroups.map(([id, g]) => (
+                  <TabsTrigger key={id} value={String(id)}>
+                    {g.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {viewGroups.map(([id, g]) => (
+                <TabsContent key={id} value={String(id)} className="mt-4 space-y-2">
+                  <ul className="space-y-2">
+                    {g.rows.map((r, idx) => (
+                      <li
+                        key={`${r.time}-${idx}`}
+                        className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm"
+                      >
+                        <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="font-mono tabular-nums">{r.time}</span>
+                        {r.spotName && (
+                          <span className="text-muted-foreground">· {r.spotName}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
     </div>

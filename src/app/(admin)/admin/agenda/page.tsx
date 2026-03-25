@@ -19,7 +19,7 @@ export default async function AgendaPage({ searchParams }: Props) {
   const nextDay = new Date(selectedDate);
   nextDay.setDate(nextDay.getDate() + 1);
 
-  const [sessions, agendas] = await Promise.all([
+  const [sessions, agendas, bookingStudents] = await Promise.all([
     prisma.sessions.findMany({
       where: {
         organization_id: orgId,
@@ -50,6 +50,11 @@ export default async function AgendaPage({ searchParams }: Props) {
         },
       },
     }),
+    prisma.students.findMany({
+      where: { organization_id: orgId, deleted_at: null },
+      include: { user: { select: { name: true, email: true } } },
+      orderBy: { user: { name: "asc" } },
+    }),
   ]);
 
   const serialized = sessions.map((s) => ({
@@ -60,10 +65,17 @@ export default async function AgendaPage({ searchParams }: Props) {
     status: s.status,
     type: s.type,
     notes: s.notes,
+    bookingSource: s.booking_source,
     studentName: s.student?.user.name ?? "—",
     studentPhone: s.student?.user.phone ?? "",
     instructorName: s.instructor?.user.name ?? "—",
     spotName: s.spot?.name ?? "—",
+  }));
+
+  const studentsForBooking = bookingStudents.map((st) => ({
+    id: st.id,
+    name: st.user.name,
+    email: st.user.email,
   }));
 
   const availableSlots = agendas.flatMap((a) =>
@@ -78,5 +90,12 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const dateStr = selectedDate.toISOString().split("T")[0];
 
-  return <AgendaClient sessions={serialized} currentDate={dateStr} availableSlots={availableSlots} />;
+  return (
+    <AgendaClient
+      sessions={serialized}
+      currentDate={dateStr}
+      availableSlots={availableSlots}
+      bookingStudents={studentsForBooking}
+    />
+  );
 }

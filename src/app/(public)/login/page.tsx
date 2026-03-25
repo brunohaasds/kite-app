@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import LoginClient from "./login-client";
 
 export const metadata: Metadata = {
-  title: "Login - Kite App",
+  title: "Login",
 };
 
 export default function LoginPage() {
