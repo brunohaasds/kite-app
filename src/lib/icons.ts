@@ -21,6 +21,7 @@ export {
 
   // Users & people
   User,
+  UserCircle,
   Users,
 
   // Actions

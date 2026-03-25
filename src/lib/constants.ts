@@ -122,10 +122,19 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/escola", label: "Escola", icon: "Settings" },
 ] as const;
 
+export const USER_ROLE_LABELS: Record<string, string> = {
+  superadmin: "Super Admin",
+  admin: "Admin",
+  instructor: "Instrutor",
+  student: "Aluno",
+  service_provider: "Prestador",
+};
+
 export const SUPERADMIN_NAV_ITEMS = [
   { href: "/super-admin", label: "Dashboard", icon: "Home" },
   { href: "/super-admin/spots", label: "Global Spots", icon: "MapPin" },
   { href: "/super-admin/escolas", label: "Escolas", icon: "Store" },
+  { href: "/super-admin/usuarios", label: "Usuários", icon: "UserCircle" },
   { href: "/super-admin/alunos", label: "Alunos", icon: "Users" },
 ] as const;
 

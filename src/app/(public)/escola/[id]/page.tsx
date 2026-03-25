@@ -220,26 +220,6 @@ export default async function SchoolLandingPage({ params }: Props) {
           </div>
         )}
 
-        {/* Parceiros — após próximos horários */}
-        {partners.length > 0 && (
-          <div>
-            <h2 className="mb-3 text-xl font-bold">Parceiros</h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              Prestadores vinculados a esta escola — combine valores pelo WhatsApp ou peça pelo app
-              (conta de aluno).
-            </p>
-            <div className="space-y-3">
-              {partners.map((p) => (
-                <PartnerServiceCard
-                  key={p.id}
-                  service={p}
-                  canRequest={canRequestPartner}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Footer */}
         <div className="space-y-3 border-t pt-4 pb-6">
           {org.site && (
@@ -265,6 +245,22 @@ export default async function SchoolLandingPage({ params }: Props) {
             </a>
           )}
         </div>
+
+        {/* Parceiros — ao final da página */}
+        {partners.length > 0 && (
+          <div className="pb-6">
+            <h2 className="mb-3 text-xl font-bold">Parceiros</h2>
+            <div className="space-y-3">
+              {partners.map((p) => (
+                <PartnerServiceCard
+                  key={p.id}
+                  service={p}
+                  canRequest={canRequestPartner}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </MobileContainer>
   );

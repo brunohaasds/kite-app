@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Home,
   Users,
+  UserCircle,
   MapPin,
   Store,
   Menu,
@@ -22,20 +23,12 @@ const iconMap: Record<string, React.ElementType> = {
   Home,
   MapPin,
   Store,
+  UserCircle,
   Users,
 };
 
 function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
-  const router = useRouter();
-
-  async function handleExitOrg() {
-    await fetch("/api/super-admin/switch-org", {
-      method: "DELETE",
-    });
-    router.push("/super-admin");
-    router.refresh();
-  }
 
   return (
     <div className="flex h-full flex-col">
@@ -74,13 +67,6 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
       </nav>
 
       <div className="border-t p-2 space-y-1">
-        <button
-          onClick={handleExitOrg}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <Store className="h-4 w-4" />
-          Voltar de Escola
-        </button>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"

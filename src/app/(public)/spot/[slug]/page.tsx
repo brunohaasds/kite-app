@@ -8,6 +8,7 @@ import { listForGlobalSpot } from "@/domain/services/repo";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PartnerServiceCard } from "@/components/services/partner-service-card";
+import { MobileContainer } from "@/components/layout/mobile-container";
 import { MapPin, Globe, Shield, Store, Calendar, ArrowLeft, CheckCircle2, Star } from "@/lib/icons";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -112,36 +113,32 @@ export default async function SpotPage({ params }: Props) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <div className="relative">
+    <MobileContainer className="min-h-screen bg-background">
+      {/* Hero — mesmo padrão da landing da escola; imagem opcional como fundo */}
+      <div className="relative h-[35vh] min-h-[280px] overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10">
         {spot.image ? (
-          <div className="h-56 sm:h-72 w-full overflow-hidden">
-            <img
-              src={spot.image}
-              alt={spot.name}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          </div>
-        ) : (
-          <div className="h-56 sm:h-72 w-full bg-gradient-to-br from-primary to-primary/70" />
-        )}
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <Link
-            href="/"
-            className="mb-3 inline-flex items-center gap-1 text-sm opacity-80 hover:opacity-100 transition-opacity"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Link>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-3xl font-bold">{spot.name}</h1>
+          <img
+            src={spot.image}
+            alt={spot.name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <Link
+          href="/"
+          className="absolute left-6 top-6 z-10 inline-flex items-center gap-1 text-sm text-white/90 transition-opacity hover:opacity-100"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Link>
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-6 text-white">
+          <h1 className="mb-1 text-3xl font-bold">{spot.name}</h1>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                 spot.access === "public"
-                  ? "bg-green-500/20 text-green-100"
-                  : "bg-amber-500/20 text-amber-100"
+                  ? "bg-green-500/25 text-green-100"
+                  : "bg-amber-500/25 text-amber-100"
               }`}
             >
               {spot.access === "public" ? (
@@ -153,11 +150,11 @@ export default async function SpotPage({ params }: Props) {
             </span>
           </div>
           {spot.parent_spot && (
-            <p className="text-sm opacity-80">
+            <p className="text-sm opacity-90">
               Dentro de{" "}
               <Link
                 href={`/spot/${spot.parent_spot.slug}`}
-                className="underline"
+                className="underline underline-offset-2"
               >
                 {spot.parent_spot.name}
               </Link>
@@ -166,7 +163,7 @@ export default async function SpotPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl space-y-8 p-4 sm:p-6">
+      <div className="space-y-4 p-4 sm:space-y-8">
         {/* Description */}
         {spot.description && (
           <section>
@@ -250,26 +247,6 @@ export default async function SpotPage({ params }: Props) {
           </section>
         )}
 
-        {/* Partner services (global spot scope) */}
-        {partners.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Parceiros neste spot</h2>
-            <p className="text-sm text-muted-foreground">
-              Prestadores vinculados a esta praia — entre em contato ou solicite pelo app (conta de
-              aluno).
-            </p>
-            <div className="space-y-3">
-              {partners.map((p) => (
-                <PartnerServiceCard
-                  key={p.id}
-                  service={p}
-                  canRequest={canRequestPartner}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Schools */}
         {allOrgs.length > 0 && (
           <section className="space-y-3">
@@ -345,7 +322,23 @@ export default async function SpotPage({ params }: Props) {
             </div>
           </section>
         )}
+
+        {/* Partner services (global spot scope) — ao final */}
+        {partners.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Parceiros neste spot</h2>
+            <div className="space-y-3">
+              {partners.map((p) => (
+                <PartnerServiceCard
+                  key={p.id}
+                  service={p}
+                  canRequest={canRequestPartner}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-    </div>
+    </MobileContainer>
   );
 }

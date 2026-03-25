@@ -5,7 +5,7 @@ import { requireSuperAdmin } from "@/lib/rbac/require-permission";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Users, Store, MapPin, Award } from "@/lib/icons";
+import { Users, UserCircle, Store, MapPin, Award } from "@/lib/icons";
 
 export const metadata: Metadata = {
   title: "Dashboard - Super Admin",
@@ -14,9 +14,10 @@ export const metadata: Metadata = {
 export default async function SuperAdminDashboardPage() {
   await requireSuperAdmin();
 
-  const [orgCount, studentCount, instructorCount, spotCount] =
+  const [orgCount, userCount, studentCount, instructorCount, spotCount] =
     await Promise.all([
       prisma.organizations.count({ where: { deleted_at: null } }),
+      prisma.users.count({ where: { deleted_at: null } }),
       prisma.students.count({ where: { deleted_at: null } }),
       prisma.instructors.count({ where: { deleted_at: null } }),
       prisma.global_spots.count({ where: { deleted_at: null } }),
@@ -24,6 +25,7 @@ export default async function SuperAdminDashboardPage() {
 
   const kpis = [
     { label: "Escolas", value: orgCount, icon: Store },
+    { label: "Usuários", value: userCount, icon: UserCircle },
     { label: "Alunos", value: studentCount, icon: Users },
     { label: "Instrutores", value: instructorCount, icon: Award },
     { label: "Global Spots", value: spotCount, icon: MapPin },
@@ -33,7 +35,7 @@ export default async function SuperAdminDashboardPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold tracking-tight">Super Admin</h1>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -54,7 +56,7 @@ export default async function SuperAdminDashboardPage() {
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Ações Rápidas</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <Button
             asChild
             variant="outline"
@@ -68,6 +70,13 @@ export default async function SuperAdminDashboardPage() {
             className="h-auto justify-center py-3"
           >
             <Link href="/super-admin/escolas">Ver Escolas</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="h-auto justify-center py-3"
+          >
+            <Link href="/super-admin/usuarios">Ver Usuários</Link>
           </Button>
           <Button
             asChild
