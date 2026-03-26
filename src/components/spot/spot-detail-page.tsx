@@ -5,7 +5,6 @@ import { listForGlobalSpot } from "@/domain/services/repo";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PartnerServiceCard } from "@/components/services/partner-service-card";
-import { MobileContainer } from "@/components/layout/mobile-container";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import {
   MapPin,
@@ -183,7 +182,7 @@ export async function SpotDetailPage({
   const p = pathPrefix;
 
   return (
-    <MobileContainer className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <div className="relative h-[35vh] min-h-[280px] overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10">
         {spot.image ? (
           <img
@@ -430,6 +429,6 @@ export async function SpotDetailPage({
           </section>
         )}
       </div>
-    </MobileContainer>
+    </div>
   );
 }

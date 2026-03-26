@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MobileContainer } from "@/components/layout/mobile-container";
 import { Button } from "@/components/ui/button";
 
 export type SpotRow = {
@@ -73,7 +72,7 @@ export function SpotsDirectoryClient({
   const p = pathPrefix;
 
   return (
-    <MobileContainer className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <div className="border-b bg-primary p-6 text-primary-foreground shadow-lg">
         <h1 className="text-2xl font-bold">Spots</h1>
         <p className="text-sm opacity-90">
@@ -183,6 +182,6 @@ export function SpotsDirectoryClient({
           )}
         </div>
       </div>
-    </MobileContainer>
+    </div>
   );
 }

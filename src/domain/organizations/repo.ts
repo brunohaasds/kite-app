@@ -47,6 +47,46 @@ export async function list(): Promise<Organization[]> {
   return rows.map(mapOrganization);
 }
 
+export type PublicOrganizationRow = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  avatar: string | null;
+  spotCount: number;
+};
+
+/** Diretório público de centros (organizações) com pelo menos um spot ativo. */
+export async function listPublicOrganizations(): Promise<PublicOrganizationRow[]> {
+  const rows = await prisma.organizations.findMany({
+    where: {
+      deleted_at: null,
+      spots: { some: { deleted_at: null } },
+    },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      avatar: true,
+      _count: {
+        select: {
+          spots: { where: { deleted_at: null } },
+        },
+      },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    description: r.description,
+    avatar: r.avatar,
+    spotCount: r._count.spots,
+  }));
+}
+
 export async function getById(id: number): Promise<Organization | null> {
   const row = await prisma.organizations.findFirst({
     where: { id, deleted_at: null },

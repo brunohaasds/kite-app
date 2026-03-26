@@ -2,7 +2,6 @@ import Link from "next/link";
 import { PartnerServiceCard } from "@/components/services/partner-service-card";
 import { Button } from "@/components/ui/button";
 import { Clock, Wind, Backpack, Star, Globe, ExternalLink, ChevronRight } from "@/lib/icons";
-import { MobileContainer } from "@/components/layout/mobile-container";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import type { SchoolLandingPayload } from "./school-landing-data";
 
@@ -15,10 +14,10 @@ export function SchoolLandingView({ data, topSlot }: Props) {
   const { org, spots, instructors, partners, canRequestPartner, upcomingSlots } = data;
 
   return (
-    <MobileContainer>
+    <>
       {topSlot}
       {/* Hero — gradiente padrão; opcionalmente imagem (admin: Configurações da Escola) */}
-      <div className="relative h-[35vh] min-h-[280px] overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10">
+      <div className="relative h-[35vh] min-h-[280px] overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10 md:min-h-[min(45vh,440px)] md:rounded-xl md:shadow-sm">
         {org.hero_image ? (
           <img
             src={org.hero_image}
@@ -66,9 +65,9 @@ export function SchoolLandingView({ data, topSlot }: Props) {
       </div>
 
       {/* Content */}
-      <div className="space-y-4 p-4">
+      <div className="space-y-4 p-4 md:space-y-8 md:py-6 md:pb-10">
         {/* Info cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 md:mx-auto md:max-w-3xl">
           <div className="rounded-xl border bg-card p-4 text-center shadow-sm">
             <Clock className="mx-auto mb-2 h-6 w-6 text-primary" />
             <p className="text-xs text-muted-foreground">Duração</p>
@@ -88,9 +87,9 @@ export function SchoolLandingView({ data, topSlot }: Props) {
 
         {/* About */}
         {org.description && (
-          <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <div className="rounded-xl border bg-card p-4 shadow-sm md:mx-auto md:max-w-3xl">
             <h2 className="mb-2 text-xl font-bold">Sobre a escola</h2>
-            <p className="text-sm text-muted-foreground">{org.description}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground md:text-base">{org.description}</p>
           </div>
         )}
 
@@ -98,7 +97,7 @@ export function SchoolLandingView({ data, topSlot }: Props) {
         {instructors.length > 0 && (
           <div>
             <h2 className="mb-3 text-xl font-bold">Instrutores</h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {instructors.map((inst) => (
                 <Link
                   key={inst.id}
@@ -196,7 +195,7 @@ export function SchoolLandingView({ data, topSlot }: Props) {
         {partners.length > 0 && (
           <div className="pb-6">
             <h2 className="mb-3 text-xl font-bold">Parceiros</h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {partners.map((p: (typeof partners)[number]) => (
                 <PartnerServiceCard
                   key={p.id}
@@ -208,6 +207,6 @@ export function SchoolLandingView({ data, topSlot }: Props) {
           </div>
         )}
       </div>
-    </MobileContainer>
+    </>
   );
 }

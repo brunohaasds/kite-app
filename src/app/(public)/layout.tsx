@@ -1,5 +1,3 @@
-import { MobileContainer } from "@/components/layout/mobile-container";
-
 export default function PublicLayout({
   children,
 }: {
@@ -7,7 +5,7 @@ export default function PublicLayout({
 }) {
   return (
     <main className="min-h-screen bg-background">
-      <MobileContainer>{children}</MobileContainer>
+      {children}
     </main>
   );
 }

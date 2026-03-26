@@ -14,7 +14,7 @@ import { MobileContainer } from "@/components/layout/mobile-container";
 import {
   LogIn,
   UserPlus,
-  Zap,
+  DollarSign,
   Package,
   CheckCircle2,
   ArrowRight,
@@ -25,7 +25,7 @@ import {
   User,
   Loader2,
 } from "@/lib/icons";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { DEFAULT_BOOKING_RULES } from "@/lib/constants";
 
 type Step = "auth" | "lesson-type" | "confirmation";
@@ -375,77 +375,82 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
                 <div className="space-y-3">
                   <p className="text-lg font-bold">Seus créditos</p>
                   {studentPackages.map((sp) => (
-                    <Button
+                    <button
                       key={sp.id}
-                      variant="outline"
-                      className="flex h-auto w-full items-start justify-between p-5 text-left transition-all hover:shadow-md"
+                      type="button"
                       onClick={() => handleSelectPackageCredit(sp)}
+                      className="relative flex w-full items-start justify-between gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-green-100">
-                          <CheckCircle2 className="h-6 w-6 text-green-600" />
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950/30">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
                         </div>
-                        <div>
-                          <p className="text-base font-bold">{sp.package.title}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold">{sp.package.title}</p>
                           <p className="text-sm text-muted-foreground">
                             {sp.sessions_remaining} crédito{sp.sessions_remaining > 1 ? "s" : ""} restante{sp.sessions_remaining > 1 ? "s" : ""}
                           </p>
                         </div>
                       </div>
-                      <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-primary" />
-                    </Button>
+                      <ArrowRight className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                    </button>
                   ))}
                 </div>
               )}
 
               {/* Single lesson */}
-              <Button
-                variant="outline"
-                className="flex h-auto w-full items-start justify-between p-5 text-left transition-all hover:shadow-md"
+              <button
+                type="button"
                 onClick={handleSelectAvulsa}
+                className="flex w-full items-start justify-between gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Zap className="h-6 w-6 text-primary" />
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+                    <DollarSign className="h-5 w-5 text-primary" />
                   </div>
-                  <div>
-                    <p className="text-base font-bold">Aula Avulsa</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold">Aula Avulsa</p>
                     <p className="text-sm text-muted-foreground">Pagar por aula individual</p>
                   </div>
                 </div>
-                <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-primary" />
-              </Button>
+                <ArrowRight className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+              </button>
 
               {/* School packages */}
               {packages.length > 0 && (
                 <div className="space-y-3">
                   <p className="text-lg font-bold">Pacotes com desconto</p>
                   {packages.map((pkg, i) => (
-                    <Button
+                    <button
                       key={pkg.id}
-                      variant="outline"
-                      className="relative flex h-auto w-full items-start justify-between p-5 text-left transition-all hover:shadow-md"
+                      type="button"
                       onClick={() => handleSelectNewPackage(pkg)}
+                      className="relative flex w-full items-start justify-between gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {i === 0 && packages.length > 1 && (
                         <Badge className="absolute right-3 top-3">Popular</Badge>
                       )}
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                          <Package className="h-6 w-6 text-primary" />
+                      <div
+                        className={cn(
+                          "flex min-w-0 items-start gap-3",
+                          i === 0 && packages.length > 1 && "pr-14",
+                        )}
+                      >
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+                          <Package className="h-5 w-5 text-primary" />
                         </div>
-                        <div>
-                          <p className="text-base font-bold">{pkg.title}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold">{pkg.title}</p>
                           <p className="text-sm text-muted-foreground">
                             {pkg.sessionCount} aulas &middot; {formatCurrency(pkg.pricePerLesson)}/aula
                           </p>
-                          <p className="mt-1 font-bold text-primary">
+                          <p className="mt-1 font-semibold text-primary">
                             {formatCurrency(pkg.price)}
                           </p>
                         </div>
                       </div>
-                      <ArrowRight className="mt-1 h-5 w-5 shrink-0 text-primary" />
-                    </Button>
+                      <ArrowRight className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                    </button>
                   ))}
                 </div>
               )}
@@ -498,7 +503,7 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
                   )}
                   <div className="border-t pt-4">
                     <SummaryRow
-                      icon={<Zap className="h-4 w-4 text-muted-foreground" />}
+                      icon={<Package className="h-4 w-4 text-muted-foreground" />}
                       label="Tipo de Aula"
                       value={
                         lessonChoice.type === "avulsa"
