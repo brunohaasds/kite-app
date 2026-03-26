@@ -101,6 +101,14 @@ export const STUDENT_NAV_ITEMS = [
   { href: "/aluno/conta", label: "Conta", icon: "User" },
 ] as const;
 
+/** Navegação inferior nas rotas públicas (mobile). */
+export const PUBLIC_NAV_ITEMS = [
+  { href: "/home", label: "Início", icon: "Home" },
+  { href: "/spots", label: "Spots", icon: "MapPin" },
+  { href: "/centers", label: "Centros", icon: "Store" },
+  { href: "/login", label: "Entrar", icon: "LogIn" },
+] as const;
+
 export const INSTRUCTOR_NAV_ITEMS = [
   { href: "/instrutor/agenda", label: "Agenda", icon: "Calendar" },
   { href: "/instrutor/conta", label: "Conta", icon: "User" },

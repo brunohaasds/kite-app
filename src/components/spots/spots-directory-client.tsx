@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { PublicDirectoryHero } from "@/components/public/public-directory-hero";
+import { cn } from "@/lib/utils";
 
 export type SpotRow = {
   id: number;
@@ -73,77 +75,77 @@ export function SpotsDirectoryClient({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b bg-primary p-6 text-primary-foreground shadow-lg">
-        <h1 className="text-2xl font-bold">Spots</h1>
-        <p className="text-sm opacity-90">
-          Explore onde aprender kitesurf
-        </p>
-      </div>
+      <PublicDirectoryHero
+        title="Spots"
+        subtitle="Explora onde aprender kitesurf, por região e nome."
+      />
 
-      <div className="space-y-4 p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={qInput}
-            onChange={(e) => setQInput(e.target.value)}
-            placeholder="Buscar por nome..."
-            className="pl-9"
-          />
+      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-2 md:px-6 lg:px-8">
+        <div className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+            <div className="relative min-w-0 flex-1 md:min-w-[min(100%,280px)]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={qInput}
+                onChange={(e) => setQInput(e.target.value)}
+                placeholder="Buscar por nome..."
+                className="bg-background pl-9"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:flex md:min-w-0 md:flex-1 md:gap-3">
+              <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
+                <Label className="text-xs">País</Label>
+                <Select
+                  value={country || "__all__"}
+                  onValueChange={(v) => setParam("country", v === "__all__" ? "" : v)}
+                >
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todos</SelectItem>
+                    {countries.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
+                <Label className="text-xs">Estado</Label>
+                <Select
+                  value={state || "__all__"}
+                  onValueChange={(v) => setParam("state", v === "__all__" ? "" : v)}
+                >
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Todos</SelectItem>
+                    {states.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              type="button"
+              className="w-full shrink-0 md:w-auto md:self-end"
+              onClick={() => router.push(spotsBase)}
+            >
+              Limpar filtros
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">País</Label>
-            <Select
-              value={country || "__all__"}
-              onValueChange={(v) => setParam("country", v === "__all__" ? "" : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                {countries.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Estado</Label>
-            <Select
-              value={state || "__all__"}
-              onValueChange={(v) => setParam("state", v === "__all__" ? "" : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                {states.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          className="w-full"
-          type="button"
-          onClick={() => router.push(spotsBase)}
-        >
-          Limpar filtros
-        </Button>
-
-        <div className="space-y-3 pt-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {initialSpots.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-8">
+            <p className="col-span-full py-12 text-center text-sm text-muted-foreground">
               Nenhum spot encontrado.
             </p>
           ) : (
@@ -151,28 +153,33 @@ export function SpotsDirectoryClient({
               <Link
                 key={spot.id}
                 href={`${p}/spot/${spot.slug}`}
-                className="flex gap-3 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+                className={cn(
+                  "group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all",
+                  "hover:border-primary/25 hover:shadow-md",
+                )}
               >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                   {spot.image ? (
                     <img
                       src={spot.image}
                       alt=""
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   ) : (
-                    <MapPin className="h-7 w-7" />
+                    <div className="flex h-full items-center justify-center bg-primary/10 text-primary">
+                      <MapPin className="h-12 w-12 opacity-80" />
+                    </div>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{spot.name}</p>
+                <div className="flex flex-1 flex-col p-4">
+                  <p className="font-semibold leading-snug">{spot.name}</p>
                   {(spot.country || spot.state) && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {[spot.state, spot.country].filter(Boolean).join(" · ")}
                     </p>
                   )}
                   {spot.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
                       {spot.description}
                     </p>
                   )}

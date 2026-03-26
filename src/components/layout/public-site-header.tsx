@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV = [
+  { href: "/home", label: "Início" },
   { href: "/spots", label: "Spots" },
   { href: "/centers", label: "Centros" },
 ] as const;
@@ -59,8 +60,8 @@ export function PublicSiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="mx-auto flex h-14 max-w-[480px] items-center justify-between gap-3 px-4 md:h-16 md:max-w-7xl md:px-6 lg:px-8">
-        <Link href="/spots" className="text-lg font-bold tracking-tight text-primary">
-          Kite
+        <Link href="/home" className="text-lg font-bold tracking-tight text-primary">
+          eKite
         </Link>
 
         <div className="hidden md:flex md:flex-1 md:items-center md:justify-center">

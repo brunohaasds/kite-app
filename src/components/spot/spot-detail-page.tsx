@@ -231,10 +231,10 @@ export async function SpotDetailPage({
         </div>
       </div>
 
-      <div className="space-y-4 p-4 sm:space-y-8">
+      <div className="mx-auto w-full max-w-6xl space-y-4 px-4 pb-10 pt-2 sm:space-y-8 md:px-6 lg:px-8">
         {spot.description && (
-          <section>
-            <p className="text-muted-foreground leading-relaxed">
+          <section className="max-w-3xl">
+            <p className="leading-relaxed text-muted-foreground md:text-lg">
               {spot.description}
             </p>
           </section>
@@ -315,12 +315,12 @@ export async function SpotDetailPage({
         {allOrgs.length > 0 && (
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Escolas neste spot</h2>
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {allOrgs.map((org) => (
                 <Link
                   key={org.id}
                   href={`${p}/spot/${slug}/escola/${org.slug}`}
-                  className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+                  className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-primary/20 hover:shadow-md"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary">
                     {org.avatar ? (

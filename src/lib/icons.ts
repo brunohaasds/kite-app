@@ -62,4 +62,7 @@ export {
   Mail,
   Store,
   Shield,
+  Sparkles,
+  Plane,
+  Quote,
 } from "lucide-react";
