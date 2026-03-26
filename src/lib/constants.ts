@@ -105,7 +105,7 @@ export const STUDENT_NAV_ITEMS = [
 export const PUBLIC_NAV_ITEMS = [
   { href: "/home", label: "Início", icon: "Home" },
   { href: "/spots", label: "Spots", icon: "MapPin" },
-  { href: "/centers", label: "Centros", icon: "Store" },
+  { href: "/centers", label: "Centros", icon: "Kitesurf" },
   { href: "/login", label: "Entrar", icon: "LogIn" },
 ] as const;
 

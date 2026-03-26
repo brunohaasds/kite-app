@@ -1,23 +1,26 @@
 import Image from "next/image";
+import { EKITE_LOGO_URL } from "@/lib/branding";
 import { cn } from "@/lib/utils";
 
 type Props = {
   size?: "sm" | "md" | "lg";
   className?: string;
+  priority?: boolean;
 };
 
-const px = { sm: 32, md: 44, lg: 64 };
+/** Dimensões intrínsecas (logo horizontal). */
+const dim = { sm: { w: 120, h: 32 }, md: { w: 150, h: 40 }, lg: { w: 180, h: 48 } };
 
-export function AppLogo({ size = "lg", className }: Props) {
-  const n = px[size];
+export function AppLogo({ size = "lg", className, priority }: Props) {
+  const { w, h } = dim[size];
   return (
     <Image
-      src="/logo.png"
+      src={EKITE_LOGO_URL}
       alt="eKite"
-      width={n}
-      height={n}
-      className={cn("object-contain", className)}
-      priority
+      width={w}
+      height={h}
+      className={cn("h-auto w-auto max-w-full object-contain", className)}
+      priority={priority}
     />
   );
 }

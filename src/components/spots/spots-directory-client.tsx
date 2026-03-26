@@ -78,6 +78,7 @@ export function SpotsDirectoryClient({
       <PublicDirectoryHero
         title="Spots"
         subtitle="Explora onde aprender kitesurf, por região e nome."
+        backgroundImage={p === "" ? "/marketing/spots.jpg" : undefined}
       />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-2 md:px-6 lg:px-8">

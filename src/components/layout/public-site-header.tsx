@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "@/lib/icons";
+import { Home, MapPin, Menu } from "@/lib/icons";
+import { KitesurfIcon } from "@/components/icons/kitesurf-icon";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,13 +13,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AppLogo } from "@/components/shared/app-logo";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/home", label: "Início" },
-  { href: "/spots", label: "Spots" },
-  { href: "/centers", label: "Centros" },
+  { href: "/home", label: "Início", Icon: Home },
+  { href: "/spots", label: "Spots", Icon: MapPin },
+  { href: "/centers", label: "Centros", Icon: KitesurfIcon },
 ] as const;
+
+function isNavActive(href: string, pathname: string) {
+  if (href === "/home") return pathname === "/home";
+  if (href === "/spots") return pathname === "/spots" || pathname.startsWith("/spot/");
+  if (href === "/centers") return pathname === "/centers" || pathname.startsWith("/escola/");
+  return false;
+}
 
 function NavLinks({
   className,
@@ -32,20 +41,19 @@ function NavLinks({
   return (
     <nav className={cn("flex flex-col gap-1 md:flex-row md:items-center md:gap-6", className)}>
       {NAV.map((item) => {
-        const active =
-          item.href === "/spots"
-            ? pathname === "/spots" || pathname.startsWith("/spot/")
-            : pathname === "/centers" || pathname.startsWith("/escola/");
+        const active = isNavActive(item.href, pathname);
+        const Icon = item.Icon;
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "rounded-md px-2 py-2 text-sm font-medium transition-colors md:py-0",
+              "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors md:py-0",
               active ? "text-primary" : "text-muted-foreground hover:text-foreground",
             )}
           >
+            <Icon className="h-4 w-4 shrink-0 md:h-5 md:w-5" aria-hidden />
             {item.label}
           </Link>
         );
@@ -60,8 +68,8 @@ export function PublicSiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="mx-auto flex h-14 max-w-[480px] items-center justify-between gap-3 px-4 md:h-16 md:max-w-7xl md:px-6 lg:px-8">
-        <Link href="/home" className="text-lg font-bold tracking-tight text-primary">
-          eKite
+        <Link href="/home" className="flex shrink-0 items-center" aria-label="eKite — Início">
+          <AppLogo size="sm" priority className="max-h-8 md:max-h-9" />
         </Link>
 
         <div className="hidden md:flex md:flex-1 md:items-center md:justify-center">

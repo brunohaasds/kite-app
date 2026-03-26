@@ -18,8 +18,8 @@ import {
   Menu,
   X,
   LogOut,
-  Wind,
 } from "@/lib/icons";
+import { AppLogo } from "@/components/shared/app-logo";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV_ITEMS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -53,10 +53,7 @@ function NavContent({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b px-4 py-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Wind className="h-4 w-4" />
-        </div>
-        <span className="font-bold tracking-tight">eKite</span>
+        <AppLogo size="sm" className="max-h-8" />
       </div>
 
       <nav className="flex-1 space-y-1 p-2">

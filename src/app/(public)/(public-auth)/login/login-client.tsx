@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Wind } from "@/lib/icons";
+import { AppLogo } from "@/components/shared/app-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,10 +53,8 @@ export default function LoginClient() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 p-4">
       <div className="w-full max-w-[400px] space-y-8">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-            <Wind className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">eKite</h1>
+          <h1 className="sr-only">Entrar na eKite</h1>
+          <AppLogo size="lg" priority className="max-h-14" />
           <p className="text-sm text-muted-foreground">
             Gestão de escolas de kitesurf
           </p>

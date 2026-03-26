@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, Store, LogIn } from "@/lib/icons";
+import { Home, MapPin, LogIn } from "@/lib/icons";
+import { KitesurfIcon } from "@/components/icons/kitesurf-icon";
 import { cn } from "@/lib/utils";
 import { PUBLIC_NAV_ITEMS } from "@/lib/constants";
 
 const iconMap: Record<string, React.ElementType> = {
   Home,
   MapPin,
-  Store,
+  Kitesurf: KitesurfIcon,
   LogIn,
 };
 

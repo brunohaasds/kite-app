@@ -56,6 +56,7 @@ export {
   Loader2,
 
   // Misc
+  Layers,
   Heart,
   Award,
   Phone,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { Toaster } from "sonner";
+import { EKITE_LOGO_URL } from "@/lib/branding";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
   description:
     "Plataforma de gestão operacional para escolas de kitesurf. Agenda, alunos, pacotes e financeiro.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: EKITE_LOGO_URL,
+    apple: EKITE_LOGO_URL,
   },
 };
 
