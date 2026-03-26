@@ -1,14 +1,24 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { findBySlug } from "@/domain/global-spots/repo";
-
-type GlobalSpot = NonNullable<Awaited<ReturnType<typeof findBySlug>>>;
 import { listForGlobalSpot } from "@/domain/services/repo";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PartnerServiceCard } from "@/components/services/partner-service-card";
 import { MobileContainer } from "@/components/layout/mobile-container";
-import { MapPin, Globe, Shield, Store, Calendar, ArrowLeft, CheckCircle2, Star } from "@/lib/icons";
+import { UserAvatar } from "@/components/shared/user-avatar";
+import {
+  MapPin,
+  Globe,
+  Shield,
+  Store,
+  ArrowLeft,
+  CheckCircle2,
+  Star,
+  ChevronRight,
+} from "@/lib/icons";
+
+type GlobalSpot = NonNullable<Awaited<ReturnType<typeof findBySlug>>>;
 
 type Props = {
   slug: string;
@@ -49,6 +59,7 @@ export async function SpotDetailPage({
           where: {
             deleted_at: null,
             booked: false,
+            instructor_id: { not: null },
             agenda: {
               deleted_at: null,
               published: true,
@@ -65,13 +76,67 @@ export async function SpotDetailPage({
               },
             },
             instructor: {
-              select: { user: { select: { name: true } } },
+              select: {
+                id: true,
+                avatar: true,
+                user: { select: { name: true } },
+              },
             },
           },
           orderBy: [{ agenda: { date: "asc" } }, { time: "asc" }],
-          take: 10,
+          take: 48,
         })
       : [];
+
+  type UpcomingSlot = (typeof upcomingSlots)[number];
+
+  const instructorScheduleGroups = (() => {
+    const map = new Map<
+      number,
+      {
+        instructorId: number;
+        name: string;
+        avatar: string | null;
+        orgSlug: string;
+        orgName: string;
+        slots: UpcomingSlot[];
+      }
+    >();
+    for (const slot of upcomingSlots) {
+      if (!slot.instructor_id || !slot.instructor) continue;
+      const id = slot.instructor_id;
+      const cur = map.get(id);
+      if (cur) {
+        cur.slots.push(slot);
+      } else {
+        map.set(id, {
+          instructorId: id,
+          name: slot.instructor.user.name,
+          avatar: slot.instructor.avatar,
+          orgSlug: slot.agenda.organization.slug,
+          orgName: slot.agenda.organization.name,
+          slots: [slot],
+        });
+      }
+    }
+    for (const g of map.values()) {
+      g.slots.sort((a, b) => {
+        const t = a.agenda.date.getTime() - b.agenda.date.getTime();
+        return t !== 0 ? t : a.time.localeCompare(b.time);
+      });
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const ta = a.slots[0]?.agenda.date.getTime() ?? 0;
+      const tb = b.slots[0]?.agenda.date.getTime() ?? 0;
+      return ta - tb;
+    });
+  })();
+
+  function formatSlotLabel(slot: UpcomingSlot) {
+    const dayShort =
+      slot.agenda.day_name.split("-")[0]?.trim() ?? slot.agenda.day_name;
+    return `${dayShort} · ${slot.time}`;
+  }
 
   const tips = (spot.tips as string[] | null) ?? [];
   const services = (spot.services as string[] | null) ?? [];
@@ -288,35 +353,64 @@ export async function SpotDetailPage({
           </section>
         )}
 
-        {upcomingSlots.length > 0 && (
+        {instructorScheduleGroups.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Próximas aulas</h2>
-            <div className="space-y-2">
-              {upcomingSlots.map((slot: (typeof upcomingSlots)[number]) => (
-                <div
-                  key={slot.id}
-                  className="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-sm"
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Calendar className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-sm font-medium">
-                      {slot.agenda.day_name} · {slot.time}
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      {slot.agenda.organization.name}
-                      {slot.instructor && ` · ${slot.instructor.user.name}`}
-                    </p>
-                  </div>
-                  <Link
-                    href={`${p}/spot/${slug}/escola/${slot.agenda.organization.slug}`}
-                    className="shrink-0 text-xs font-medium text-primary hover:underline"
+            <div>
+              <h2 className="text-lg font-semibold">Instrutores</h2>
+              <p className="text-sm text-muted-foreground">
+                Horários disponíveis nas escolas deste spot (próximos dias)
+              </p>
+            </div>
+            <div className="space-y-3">
+              {instructorScheduleGroups.map((group) => {
+                const shown = group.slots.slice(0, 5);
+                const more = group.slots.length - shown.length;
+                const profileHref = `/escola/${group.orgSlug}/instrutor/${group.instructorId}`;
+                return (
+                  <div
+                    key={group.instructorId}
+                    className="rounded-xl border bg-card p-4 shadow-sm"
                   >
-                    Agendar
-                  </Link>
-                </div>
-              ))}
+                    <div className="flex gap-3">
+                      <UserAvatar
+                        name={group.name}
+                        imageUrl={group.avatar}
+                        size="lg"
+                        className="shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold leading-tight">{group.name}</p>
+                        <p className="text-xs text-muted-foreground">{group.orgName}</p>
+                        <p className="mt-2 text-sm leading-relaxed">
+                          {shown.map((slot, i) => (
+                            <span key={slot.id}>
+                              {i > 0 ? (
+                                <span className="text-muted-foreground"> · </span>
+                              ) : null}
+                              <span className="font-medium text-foreground">
+                                {formatSlotLabel(slot)}
+                              </span>
+                            </span>
+                          ))}
+                          {more > 0 ? (
+                            <span className="text-muted-foreground">
+                              {" "}
+                              · +{more} horário{more > 1 ? "s" : ""}
+                            </span>
+                          ) : null}
+                        </p>
+                        <Link
+                          href={profileHref}
+                          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                        >
+                          Ver perfil e agendar
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
