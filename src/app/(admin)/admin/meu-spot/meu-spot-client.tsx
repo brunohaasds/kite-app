@@ -193,12 +193,15 @@ export function MeuSpotClient({
           )}
         </div>
 
-        <div className="flex justify-center">
+        <div className="space-y-2">
+          <Label>Imagem de fundo do hero (página pública do spot)</Label>
           <ImageUpload
             currentImageUrl={image || null}
             onUpload={(url) => setImage(url)}
-            context="organizations"
-            size="lg"
+            context="global_spots"
+            entityId={String(spot.id)}
+            variant="cover"
+            description="Mesma imagem exibida em /spot/[slug]. PNG, JPEG ou WebP até 2 MB."
           />
         </div>
 

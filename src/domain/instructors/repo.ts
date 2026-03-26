@@ -68,7 +68,7 @@ export async function getByUuid(uuid: string): Promise<InstructorItem | null> {
 export async function create(orgId: number, data: CreateInstructorInput) {
   const hashedPassword = await hash(data.password, 12);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const user = await tx.users.create({
       data: {
         name: data.name,

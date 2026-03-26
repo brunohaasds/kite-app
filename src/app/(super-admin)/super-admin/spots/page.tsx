@@ -22,11 +22,13 @@ export default async function SuperAdminSpotsPage() {
     }),
   ]);
 
-  const serialized = spots.map((s) => ({
+  const serialized = spots.map((s: (typeof spots)[number]) => ({
     id: s.id,
     uuid: s.uuid,
     name: s.name,
     slug: s.slug,
+    country: s.country,
+    state: s.state,
     access: s.access as "public" | "private",
     description: s.description,
     image: s.image,
@@ -42,7 +44,7 @@ export default async function SuperAdminSpotsPage() {
   }));
 
   const publicSpots = serialized.filter(
-    (s) => s.access === "public" && !s.parent_spot_id,
+    (s: (typeof serialized)[number]) => s.access === "public" && !s.parent_spot_id,
   );
 
   return (

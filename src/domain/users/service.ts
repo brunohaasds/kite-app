@@ -3,6 +3,8 @@ import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import type { CreateUserInput } from "./schema";
 
+const MINIMAL_STUDENT_PLACEHOLDER_NAME = "Aluno";
+
 export type RegisterStudentExtras = {
   level?: string | null;
   goals?: unknown;
@@ -16,7 +18,7 @@ export async function registerStudent(
   const { level, goals, notes, ...userFields } = data;
   const hashedPassword = await hash(userFields.password, 12);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const user = await tx.users.create({
       data: {
         name: userFields.name,
@@ -51,6 +53,24 @@ export async function registerStudent(
 
     return user;
   });
+}
+
+/** Utilizador `student` sem `members`/`students` até o primeiro agendamento numa escola. */
+export async function registerStudentMinimal(data: { email: string; password: string }) {
+  const hashedPassword = await hash(data.password, 12);
+  return prisma.users.create({
+    data: {
+      name: MINIMAL_STUDENT_PLACEHOLDER_NAME,
+      email: data.email,
+      phone: null,
+      password: hashedPassword,
+      role: "student",
+    },
+  });
+}
+
+export function isPlaceholderStudentName(name: string) {
+  return name.trim().toLowerCase() === MINIMAL_STUDENT_PLACEHOLDER_NAME.toLowerCase();
 }
 
 export async function assignToOrganization(userId: number, orgId: number) {

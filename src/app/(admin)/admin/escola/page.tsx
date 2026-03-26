@@ -22,6 +22,7 @@ export default async function EscolaPage() {
         name: org.name,
         description: org.description,
         avatar: org.avatar,
+        hero_image: org.hero_image,
         whatsapp: org.whatsapp,
         instagram: org.instagram,
         site: org.site,

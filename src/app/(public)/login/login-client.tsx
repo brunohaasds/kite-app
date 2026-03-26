@@ -62,6 +62,15 @@ export default function LoginClient() {
           </p>
         </div>
 
+        <p className="text-center text-sm">
+          <a
+            href="/cadastro"
+            className="font-medium text-primary hover:underline"
+          >
+            Criar conta
+          </a>
+        </p>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

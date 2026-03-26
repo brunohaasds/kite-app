@@ -14,10 +14,12 @@ model organizations {
   id          Int       @id @default(autoincrement())
   uuid        String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
   name        String    @db.VarChar(255)
+  slug        String    @unique @db.VarChar(255)
   description String?   @db.Text
   site        String?   @db.VarChar(500)
   instagram   String?   @db.VarChar(255)
   avatar      String?   @db.VarChar(500)
+  hero_image  String?   @db.VarChar(500) // URL do fundo do hero na landing pública
   whatsapp    String?   @db.VarChar(20)
   settings    Json?
   created_at  DateTime  @default(now()) @db.Timestamp(0)
@@ -70,6 +72,7 @@ model users {
   password   String    @db.VarChar(255)
   role       String    @db.VarChar(50) // superadmin | admin | instructor | student | service_provider
   last_login_at DateTime? @db.Timestamp(0)
+  profile_completed_at DateTime? @db.Timestamp(0)
   created_at DateTime  @default(now()) @db.Timestamp(0)
   updated_at DateTime  @updatedAt @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
@@ -320,6 +323,8 @@ model global_spots {
   access                String    @db.VarChar(20) @default("public") // public | private
   description           String?   @db.Text
   image                 String?   @db.VarChar(500)
+  country               String?   @db.VarChar(100)
+  state                 String?   @db.VarChar(100)
   tips                  Json?
   services              Json?
   latitude              Decimal?  @db.Decimal(10, 7)

@@ -7,7 +7,7 @@ export async function listByOrganization(organizationId: number): Promise<Spot[]
     where: { organization_id: organizationId, deleted_at: null },
     orderBy: { created_at: "desc" },
   });
-  return rows.map((r) => ({
+  return rows.map((r: (typeof rows)[number]) => ({
     id: r.id,
     uuid: r.uuid,
     organization_id: r.organization_id,

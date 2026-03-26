@@ -144,11 +144,13 @@ function mergeSlotsForApi(block: PreviewDateBlock) {
 
 export function NovaAgendaClient({
   organizationId,
+  organizationSlug,
   instructors,
   spots,
   existingAgendas,
 }: {
   organizationId: number;
+  organizationSlug: string;
   instructors: Instructor[];
   spots: Spot[];
   existingAgendas: ExistingAgenda[];
@@ -311,7 +313,7 @@ export function NovaAgendaClient({
   }
 
   async function copyPublicAgendaUrl(agenda: ExistingAgenda) {
-    const url = `${window.location.origin}/escola/${organizationId}/agenda`;
+    const url = `${window.location.origin}/escola/${organizationSlug}/agenda`;
     await navigator.clipboard.writeText(url);
     setCopiedAgendaUuid(agenda.uuid);
     toast.success("Link da agenda copiado!");

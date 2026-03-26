@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import type { AddSlotInput, CreateAgendaInput } from "./schema";
 import type { AgendaItem, AgendaSlotItem } from "./types";
@@ -178,8 +179,8 @@ export async function publish(agendaId: number) {
   return mapAgendaRow(row);
 }
 
-export async function bookSlot(slotId: number) {
-  const slot = await prisma.agenda_slots.findFirst({
+export async function bookSlotInTransaction(tx: Prisma.TransactionClient, slotId: number) {
+  const slot = await tx.agenda_slots.findFirst({
     where: { id: slotId, deleted_at: null },
   });
   if (!slot) {
@@ -189,10 +190,16 @@ export async function bookSlot(slotId: number) {
     throw new Error("Slot já reservado");
   }
 
-  const row = await prisma.agenda_slots.update({
+  const row = await tx.agenda_slots.update({
     where: { id: slotId },
     data: { booked: true },
     include: slotInclude,
   });
   return mapSlotRow(row);
+}
+
+export async function bookSlot(slotId: number) {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) =>
+    bookSlotInTransaction(tx, slotId),
+  );
 }

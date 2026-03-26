@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getById as getOrg } from "@/domain/organizations/repo";
 import { getById as getInstructor } from "@/domain/instructors/repo";
+import { getOrganizationFromEscolaParam } from "@/lib/resolve-org";
 import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,21 +11,20 @@ import { ArrowLeft, Award, Clock, MessageCircle } from "@/lib/icons";
 import { whatsappLink } from "@/lib/utils";
 
 interface Props {
-  params: Promise<{ id: string; instructorId: string }>;
+  params: Promise<{ orgSlug: string; instructorId: string }>;
 }
 
 export default async function InstructorPublicPage({ params }: Props) {
-  const { id, instructorId } = await params;
-  const orgId = Number(id);
+  const { orgSlug, instructorId } = await params;
   const instId = Number(instructorId);
-  if (isNaN(orgId) || isNaN(instId)) notFound();
+  if (isNaN(instId)) notFound();
 
-  const [org, instructor] = await Promise.all([
-    getOrg(orgId),
-    getInstructor(instId),
-  ]);
+  const org = await getOrganizationFromEscolaParam(orgSlug);
+  const orgId = org.id;
 
-  if (!org || !instructor || instructor.organization_id !== orgId) notFound();
+  const instructor = await getInstructor(instId);
+
+  if (!instructor || instructor.organization_id !== orgId) notFound();
 
   const slots = await prisma.agenda_slots.findMany({
     where: {
@@ -49,7 +48,7 @@ export default async function InstructorPublicPage({ params }: Props) {
     take: 20,
   });
 
-  const upcomingSlots = slots.map((s) => ({
+  const upcomingSlots = slots.map((s: (typeof slots)[number]) => ({
     id: s.id,
     time: s.time,
     date: s.agenda.date.toLocaleDateString("pt-BR", {
@@ -67,7 +66,7 @@ export default async function InstructorPublicPage({ params }: Props) {
     <MobileContainer>
       {/* Header with avatar */}
       <div className="rounded-b-3xl bg-primary p-6 text-primary-foreground shadow-lg">
-        <Link href={`/escola/${orgId}`}>
+        <Link href={`/escola/${org.slug}`}>
           <Button
             variant="ghost"
             size="icon"
@@ -131,7 +130,7 @@ export default async function InstructorPublicPage({ params }: Props) {
           <div>
             <h2 className="mb-3 text-lg font-bold">Próximos Horários</h2>
             <div className="space-y-2">
-              {upcomingSlots.map((slot) => (
+              {upcomingSlots.map((slot: (typeof upcomingSlots)[number]) => (
                 <div
                   key={slot.id}
                   className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm"
@@ -154,7 +153,7 @@ export default async function InstructorPublicPage({ params }: Props) {
                       )}
                     </div>
                   </div>
-                  <Link href={`/escola/${orgId}/agendar/${slot.id}`}>
+                  <Link href={`/escola/${org.slug}/agendar/${slot.id}`}>
                     <Button size="sm">Agendar</Button>
                   </Link>
                 </div>

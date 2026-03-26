@@ -192,7 +192,8 @@ rm -rf .next && npm run dev
 
 ## Padrões de Documentação
 
-- **Nova feature complexa** → criar `BRAIN/features/PLANNING_<FEATURE>.md` antes de implementar
+- **Feature** → criar `BRAIN/features/<FEATURE>.md` com detalhamento completo de modulos/funcionalidades
+- **Índice** → manter [BRAIN/features/README.md](./BRAIN/features/README.md) e [BRAIN/index.md](./BRAIN/index.md) atualizados com links
 - **Decisão arquitetural** → adicionar em `ARQUITETURA.md` seção "Decisões"
 - **Sprint concluída** → criar `BRAIN/sprints/SPRINT<N>.md`
 - **Atualizar ARQUITETURA.md** sempre ao adicionar módulo ou mudar stack

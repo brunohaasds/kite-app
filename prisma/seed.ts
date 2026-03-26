@@ -33,6 +33,7 @@ async function main() {
   // ── Organizations ────────────────────────────────────────────
   const org1 = await prisma.organizations.create({
     data: {
+      slug: "vento-livre-kitesurf",
       name: "Vento Livre Kitesurf",
       description:
         "Escola de kitesurf em Preá com instrutores certificados IKO. Oferecemos aulas para todos os níveis.",
@@ -53,6 +54,7 @@ async function main() {
 
   const org2 = await prisma.organizations.create({
     data: {
+      slug: "ondas-do-mar-kite-school",
       name: "Ondas do Mar Kite School",
       description:
         "A melhor escola de kitesurf de Jericoacoara. Venha aprender com os melhores!",
@@ -66,6 +68,7 @@ async function main() {
 
   const org3 = await prisma.organizations.create({
     data: {
+      slug: "kite-paradise",
       name: "Kite Paradise",
       description: "Kitesurf escola premium no paraíso",
       site: "https://kiteparadise.com",
@@ -76,11 +79,26 @@ async function main() {
     },
   });
 
+  const orgLouvaKite = await prisma.organizations.create({
+    data: {
+      slug: "louva-kite",
+      name: "Louva Kite",
+      description: "Escola de kitesurf — aulas e experiências na praia.",
+      site: "https://louvakite.com.br",
+      instagram: "louvakite",
+      avatar: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=200",
+      whatsapp: "5585999004004",
+      settings: { defaultSessionDuration: 120 },
+    },
+  });
+
   // ── Global spots (catálogo super-admin) + vínculo operacional ──
   const gPrea = await prisma.global_spots.create({
     data: {
       name: "Preá",
       slug: "prea",
+      country: "Brasil",
+      state: "CE",
       access: "public",
       description: "Praia de Preá — vento constante no Ceará",
       tips: ["Chegar com antecedência", "Protetor solar"],
@@ -91,6 +109,8 @@ async function main() {
     data: {
       name: "Jericoacoara",
       slug: "jericoacoara",
+      country: "Brasil",
+      state: "CE",
       access: "public",
       description: "Lagoas e mar de Jeri",
     },
@@ -99,6 +119,8 @@ async function main() {
     data: {
       name: "Tramandaí",
       slug: "tramandai",
+      country: "Brasil",
+      state: "RS",
       access: "public",
       description: "Litoral gaúcho com ventos sul",
     },
@@ -127,6 +149,14 @@ async function main() {
       global_spot_id: gTramandai.id,
       name: "Tramandaí",
       description: "Litoral gaúcho com ventos sul",
+    },
+  });
+  const spotLouvaKite = await prisma.spots.create({
+    data: {
+      organization_id: orgLouvaKite.id,
+      global_spot_id: gPrea.id,
+      name: "Preá",
+      description: "Base Louva Kite em Preá",
     },
   });
 
@@ -212,6 +242,7 @@ async function main() {
       { organization_id: org2.id, user_id: adminUser.id },
       { organization_id: org2.id, user_id: instructorRafael.id },
       { organization_id: org2.id, user_id: providerFilme.id },
+      { organization_id: orgLouvaKite.id, user_id: adminUser.id },
     ],
   });
 
@@ -563,11 +594,15 @@ async function main() {
   });
 
   console.log("Seed completed successfully!");
-  console.log(`  Organizations: ${org1.name}, ${org2.name}, ${org3.name}`);
+  console.log(
+    `  Organizations: ${org1.name}, ${org2.name}, ${org3.name}, ${orgLouvaKite.name}`,
+  );
   console.log(
     `  Global spots: ${gPrea.slug}, ${gJeri.slug}, ${gTramandai.slug} (públicos)`,
   );
-  console.log(`  Spots: ${spotPrea.name}, ${spotJeri.name}, ${spotTramandai.name}`);
+  console.log(
+    `  Spots: ${spotPrea.name}, ${spotJeri.name}, ${spotTramandai.name}, ${spotLouvaKite.name} (Louva Kite)`,
+  );
   console.log(
     `  Users: superadmin + admin + 4 instructors + 3 students + 2 service_provider (fotografo@kiteapp.com, filmes@kiteapp.com)`,
   );

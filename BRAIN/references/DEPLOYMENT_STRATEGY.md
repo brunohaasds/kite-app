@@ -68,6 +68,17 @@ vercel --prod
 
 ---
 
+## Prisma Client gerado (`src/generated/prisma`)
+
+O projeto usa **output customizado** do Prisma (`schema.prisma` → `../src/generated/prisma`). Essa pasta **não** vai para o Git (`.gitignore`).
+
+- No **`package.json`**, o script **`postinstall`: `prisma generate`** garante que, após `npm install` na Vercel, o client exista antes do `next build`.
+- Se o build falhar com *module not found* para `@/generated/prisma/client`, verificar se `postinstall` está ativo e se `DATABASE_URL` está disponível no ambiente de build quando exigido pelo `prisma.config.ts`.
+
+Documentação detalhada: [../features/BUILD_DEPLOY_VERCEL.md](../features/BUILD_DEPLOY_VERCEL.md).
+
+---
+
 ## Migrations em Produção
 
 ```bash
@@ -78,6 +89,8 @@ npx prisma migrate deploy
 # Em CI/CD (Vercel build command):
 npx prisma migrate deploy && npm run build
 ```
+
+> **Nota:** Com `postinstall` gerando o client, o comando de build pode permanecer apenas `npm run build` na Vercel, desde que `migrate deploy` rode em pipeline separado ou como passo explícito antes do build, conforme política do time.
 
 ---
 

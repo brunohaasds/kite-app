@@ -95,6 +95,7 @@ export const DEFAULTS = {
 // ============================================================
 export const STUDENT_NAV_ITEMS = [
   { href: "/aluno/aulas", label: "Aulas", icon: "Calendar" },
+  { href: "/aluno/spots", label: "Spots", icon: "MapPin" },
   { href: "/aluno/pacotes", label: "Pacotes", icon: "Zap" },
   { href: "/aluno/convidar", label: "Convidar", icon: "UserPlus" },
   { href: "/aluno/conta", label: "Conta", icon: "User" },

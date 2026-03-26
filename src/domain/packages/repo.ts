@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import type { CreatePackageInput, UpdatePackageInput } from "./schema";
 import type { PackageItem, StudentPackageItem } from "./types";
@@ -121,80 +122,92 @@ export async function remove(id: number) {
   });
 }
 
+export async function purchaseInTransaction(
+  tx: Prisma.TransactionClient,
+  studentId: number,
+  packageId: number,
+) {
+  const pkg = await tx.packages.findFirst({
+    where: { id: packageId, deleted_at: null, active: true },
+  });
+  if (!pkg) {
+    throw new Error("Pacote não encontrado ou inativo");
+  }
+
+  const student = await tx.students.findFirst({
+    where: { id: studentId, deleted_at: null },
+  });
+  if (!student) {
+    throw new Error("Aluno não encontrado");
+  }
+
+  if (student.organization_id !== pkg.organization_id) {
+    throw new Error("Pacote não pertence à organização do aluno");
+  }
+
+  const sessionsTotal = pkg.session_count;
+  const purchaseDate = new Date();
+  let expiryDate: Date | null = null;
+  if (pkg.validity_days != null) {
+    expiryDate = new Date(purchaseDate);
+    expiryDate.setDate(expiryDate.getDate() + pkg.validity_days);
+  }
+
+  const created = await tx.student_packages.create({
+    data: {
+      student_id: studentId,
+      package_id: packageId,
+      sessions_total: sessionsTotal,
+      sessions_used: 0,
+      sessions_remaining: sessionsTotal,
+      status: "active",
+      purchase_date: purchaseDate,
+      expiry_date: expiryDate,
+    },
+    include: { package: true },
+  });
+
+  return mapStudentPackageRow(created);
+}
+
 export async function purchase(studentId: number, packageId: number) {
-  return prisma.$transaction(async (tx) => {
-    const pkg = await tx.packages.findFirst({
-      where: { id: packageId, deleted_at: null, active: true },
-    });
-    if (!pkg) {
-      throw new Error("Pacote não encontrado ou inativo");
-    }
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) =>
+    purchaseInTransaction(tx, studentId, packageId),
+  );
+}
 
-    const student = await tx.students.findFirst({
-      where: { id: studentId, deleted_at: null },
-    });
-    if (!student) {
-      throw new Error("Aluno não encontrado");
-    }
+export async function useCreditInTransaction(tx: Prisma.TransactionClient, studentPackageId: number) {
+  const sp = await tx.student_packages.findFirst({
+    where: { id: studentPackageId, deleted_at: null },
+  });
+  if (!sp) {
+    throw new Error("Pacote do aluno não encontrado");
+  }
+  if (sp.status !== "active") {
+    throw new Error("Pacote não está ativo");
+  }
+  if (sp.expiry_date && sp.expiry_date < new Date()) {
+    throw new Error("Pacote expirado");
+  }
+  if (sp.sessions_remaining <= 0) {
+    throw new Error("Sem créditos restantes");
+  }
 
-    if (student.organization_id !== pkg.organization_id) {
-      throw new Error("Pacote não pertence à organização do aluno");
-    }
+  const sessionsRemaining = sp.sessions_remaining - 1;
+  const sessionsUsed = sp.sessions_used + 1;
 
-    const sessionsTotal = pkg.session_count;
-    const purchaseDate = new Date();
-    let expiryDate: Date | null = null;
-    if (pkg.validity_days != null) {
-      expiryDate = new Date(purchaseDate);
-      expiryDate.setDate(expiryDate.getDate() + pkg.validity_days);
-    }
-
-    const created = await tx.student_packages.create({
-      data: {
-        student_id: studentId,
-        package_id: packageId,
-        sessions_total: sessionsTotal,
-        sessions_used: 0,
-        sessions_remaining: sessionsTotal,
-        status: "active",
-        purchase_date: purchaseDate,
-        expiry_date: expiryDate,
-      },
-      include: { package: true },
-    });
-
-    return mapStudentPackageRow(created);
+  return tx.student_packages.update({
+    where: { id: studentPackageId },
+    data: {
+      sessions_remaining: sessionsRemaining,
+      sessions_used: sessionsUsed,
+      status: sessionsRemaining === 0 ? "completed" : sp.status,
+    },
   });
 }
 
 export async function useCredit(studentPackageId: number) {
-  return prisma.$transaction(async (tx) => {
-    const sp = await tx.student_packages.findFirst({
-      where: { id: studentPackageId, deleted_at: null },
-    });
-    if (!sp) {
-      throw new Error("Pacote do aluno não encontrado");
-    }
-    if (sp.status !== "active") {
-      throw new Error("Pacote não está ativo");
-    }
-    if (sp.expiry_date && sp.expiry_date < new Date()) {
-      throw new Error("Pacote expirado");
-    }
-    if (sp.sessions_remaining <= 0) {
-      throw new Error("Sem créditos restantes");
-    }
-
-    const sessionsRemaining = sp.sessions_remaining - 1;
-    const sessionsUsed = sp.sessions_used + 1;
-
-    return tx.student_packages.update({
-      where: { id: studentPackageId },
-      data: {
-        sessions_remaining: sessionsRemaining,
-        sessions_used: sessionsUsed,
-        status: sessionsRemaining === 0 ? "completed" : sp.status,
-      },
-    });
-  });
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) =>
+    useCreditInTransaction(tx, studentPackageId),
+  );
 }

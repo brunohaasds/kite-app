@@ -1,39 +1,41 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { listByOrg as listPackages } from "@/domain/packages/repo";
-import { getById as getOrg } from "@/domain/organizations/repo";
+import { getOrganizationFromEscolaParam } from "@/lib/resolve-org";
 import { BookingWizard } from "./booking-wizard";
 
 interface Props {
-  params: Promise<{ id: string; slotId: string }>;
+  params: Promise<{ orgSlug: string; slotId: string }>;
 }
 
 export default async function BookingPage({ params }: Props) {
-  const { id, slotId } = await params;
-  const orgId = Number(id);
+  const { orgSlug, slotId } = await params;
   const slotIdNum = Number(slotId);
 
-  if (isNaN(orgId) || isNaN(slotIdNum)) notFound();
+  if (isNaN(slotIdNum)) notFound();
 
-  const [slot, org, packages] = await Promise.all([
+  const org = await getOrganizationFromEscolaParam(orgSlug);
+  const orgId = org.id;
+
+  const [slot, packages] = await Promise.all([
     prisma.agenda_slots.findUnique({
       where: { id: slotIdNum },
       include: {
-        agenda: { select: { date: true, day_name: true } },
+        agenda: { select: { date: true, day_name: true, organization_id: true } },
         spot: { select: { id: true, name: true } },
         instructor: {
           select: { id: true, user: { select: { name: true } } },
         },
       },
     }),
-    getOrg(orgId),
     listPackages(orgId),
   ]);
 
-  if (!slot || !org) notFound();
+  if (!slot) notFound();
   if (slot.booked) notFound();
+  if (slot.agenda.organization_id !== orgId) notFound();
 
-  const activePackages = packages.filter((p) => p.active);
+  const activePackages = packages.filter((p: (typeof packages)[number]) => p.active);
 
   const slotData = {
     id: slot.id,
@@ -50,7 +52,7 @@ export default async function BookingPage({ params }: Props) {
     whatsapp: org.whatsapp,
   };
 
-  const packagesData = activePackages.map((p) => ({
+  const packagesData = activePackages.map((p: (typeof activePackages)[number]) => ({
     id: p.id,
     title: p.title,
     description: p.description,

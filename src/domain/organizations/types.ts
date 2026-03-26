@@ -2,10 +2,12 @@ export type Organization = {
   id: number;
   uuid: string;
   name: string;
+  slug: string;
   description: string | null;
   site: string | null;
   instagram: string | null;
   avatar: string | null;
+  hero_image: string | null;
   whatsapp: string | null;
   settings: Record<string, unknown> | null;
   created_at: Date;

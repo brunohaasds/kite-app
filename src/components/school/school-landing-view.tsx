@@ -1,85 +1,31 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getById } from "@/domain/organizations/repo";
-import { listForOrganization } from "@/domain/services/repo";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
 import { PartnerServiceCard } from "@/components/services/partner-service-card";
 import { Button } from "@/components/ui/button";
 import { Clock, Wind, Backpack, Star, Globe, ExternalLink, ChevronRight } from "@/lib/icons";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import type { SchoolLandingPayload } from "./school-landing-data";
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
+type Props = {
+  data: SchoolLandingPayload;
+  topSlot?: React.ReactNode;
+};
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const orgId = Number(id);
-  if (isNaN(orgId)) {
-    return { title: "Escola" };
-  }
-  const org = await getById(orgId);
-  if (!org) {
-    return { title: "Escola não encontrada" };
-  }
-  return {
-    title: `${org.name} - Agendar Aula`,
-    ...(org.description ? { description: org.description } : {}),
-  };
-}
-
-export default async function SchoolLandingPage({ params }: Props) {
-  const { id } = await params;
-  const orgId = Number(id);
-  if (isNaN(orgId)) notFound();
-
-  const org = await getById(orgId);
-  if (!org) notFound();
-
-  const spots = await prisma.spots.findMany({
-    where: { organization_id: orgId, deleted_at: null },
-  });
-
-  const instructors = await prisma.instructors.findMany({
-    where: { organization_id: orgId, deleted_at: null },
-    include: { user: { select: { name: true } } },
-  });
-
-  const partners = await listForOrganization(orgId);
-  const session = await auth();
-  const canRequestPartner = session?.user?.role === "student";
-
-  const agendas = await prisma.agendas.findMany({
-    where: { organization_id: orgId, published: true, deleted_at: null },
-    include: {
-      slots: {
-        where: { booked: false, deleted_at: null },
-        include: { instructor: { include: { user: { select: { name: true } } } } },
-        take: 4,
-        orderBy: { time: "asc" },
-      },
-    },
-    orderBy: { date: "asc" },
-    take: 2,
-  });
-
-  const upcomingSlots = agendas.flatMap((a) =>
-    a.slots.map((s) => ({
-      day: a.day_name.slice(0, 3),
-      date: a.date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      time: s.time,
-      instructor: s.instructor?.user.name ?? "A definir",
-      slotId: s.id,
-    })),
-  );
+export function SchoolLandingView({ data, topSlot }: Props) {
+  const { org, spots, instructors, partners, canRequestPartner, upcomingSlots } = data;
 
   return (
     <MobileContainer>
-      {/* Hero */}
+      {topSlot}
+      {/* Hero — gradiente padrão; opcionalmente imagem (admin: Configurações da Escola) */}
       <div className="relative h-[35vh] min-h-[280px] overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10">
+        {org.hero_image ? (
+          <img
+            src={org.hero_image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <h1 className="mb-1 text-3xl font-bold">{org.name}</h1>
@@ -95,7 +41,7 @@ export default async function SchoolLandingPage({ params }: Props) {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Link href={`/escola/${orgId}/agenda`}>
+            <Link href={`/escola/${org.slug}/agenda`}>
               <Button size="lg" className="flex-1 shadow-lg">
                 Agendar aula
               </Button>
@@ -156,7 +102,7 @@ export default async function SchoolLandingPage({ params }: Props) {
               {instructors.map((inst) => (
                 <Link
                   key={inst.id}
-                  href={`/escola/${orgId}/instrutor/${inst.id}`}
+                  href={`/escola/${org.slug}/instrutor/${inst.id}`}
                   className="block rounded-xl border bg-card p-4 shadow-sm hover:border-primary/30 transition-colors"
                 >
                   <div className="flex items-center gap-4">
@@ -187,7 +133,7 @@ export default async function SchoolLandingPage({ params }: Props) {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl font-bold">Próximos horários</h2>
-              <Link href={`/escola/${orgId}/agenda`}>
+              <Link href={`/escola/${org.slug}/agenda`}>
                 <Button variant="ghost" size="sm" className="text-primary">
                   Ver agenda
                 </Button>
@@ -251,7 +197,7 @@ export default async function SchoolLandingPage({ params }: Props) {
           <div className="pb-6">
             <h2 className="mb-3 text-xl font-bold">Parceiros</h2>
             <div className="space-y-3">
-              {partners.map((p) => (
+              {partners.map((p: (typeof partners)[number]) => (
                 <PartnerServiceCard
                   key={p.id}
                   service={p}

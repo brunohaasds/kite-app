@@ -21,11 +21,11 @@ interface DayGroup {
 }
 
 interface Props {
-  orgId: number;
+  orgSlug: string;
   dayGroups: DayGroup[];
 }
 
-export function AgendaPublicClient({ orgId, dayGroups }: Props) {
+export function AgendaPublicClient({ orgSlug, dayGroups }: Props) {
   const [selectedDate, setSelectedDate] = useState(
     dayGroups[0]?.date ?? "",
   );
@@ -89,7 +89,7 @@ export function AgendaPublicClient({ orgId, dayGroups }: Props) {
               </div>
 
               {!slot.booked && (
-                <Link href={`/escola/${orgId}/agendar/${slot.slotId}`}>
+                <Link href={`/escola/${orgSlug}/agendar/${slot.slotId}`}>
                   <Button className="w-full">Agendar</Button>
                 </Link>
               )}

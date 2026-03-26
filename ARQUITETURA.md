@@ -289,6 +289,12 @@ Mobile:                    Desktop:
 | D6 | IDs como Int (não UUID como PK) | Performance de joins; UUID como campo público |
 | D7 | Soft delete (`deleted_at`) | Auditoria + recuperação |
 | D8 | JSONB para settings | Flexibilidade sem migrations para configs |
+| D9 | Cliente Prisma em `src/generated` + `postinstall: prisma generate` | Client não versionado; CI/Vercel precisa gerar antes do `next build` — ver `BRAIN/features/BUILD_DEPLOY_VERCEL.md` |
+| D10 | Documentação de features em `BRAIN/features/*.md` | Padrão do projeto (INSTRUCTIONS.md); rastreabilidade por módulo |
+
+### Documentação de funcionalidades (eKite)
+
+Índice: **[BRAIN/features/README.md](./BRAIN/features/README.md)**
 
 ---
 

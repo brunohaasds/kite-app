@@ -6,6 +6,11 @@ export default async function NovaAgendaPage() {
   const session = await requireAdmin();
   const orgId = session.user.organizationId!;
 
+  const orgRow = await prisma.organizations.findFirst({
+    where: { id: orgId, deleted_at: null },
+    select: { slug: true },
+  });
+
   const [instructors, spots, agendas] = await Promise.all([
     prisma.instructors.findMany({
       where: { organization_id: orgId, deleted_at: null },
@@ -47,6 +52,7 @@ export default async function NovaAgendaPage() {
   return (
     <NovaAgendaClient
       organizationId={orgId}
+      organizationSlug={orgRow?.slug ?? String(orgId)}
       instructors={serializedInstructors}
       spots={serializedSpots}
       existingAgendas={serializedAgendas}

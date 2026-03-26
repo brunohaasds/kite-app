@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MobileContainer } from "@/components/layout/mobile-container";
 import {
   LogIn,
@@ -27,7 +26,7 @@ import {
   Loader2,
 } from "@/lib/icons";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { EXPERIENCE_LEVEL_LABELS, DEFAULT_BOOKING_RULES } from "@/lib/constants";
+import { DEFAULT_BOOKING_RULES } from "@/lib/constants";
 
 type Step = "auth" | "lesson-type" | "confirmation";
 
@@ -82,11 +81,8 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
 
   // Auth form state
   const [authTab, setAuthTab] = useState<"existing" | "new">("new");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [level, setLevel] = useState("iniciante");
 
   async function fetchStudentPackages() {
     try {
@@ -127,8 +123,8 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
   }
 
   async function handleRegister() {
-    if (!name || !email || !password) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!email || !password) {
+      toast.error("Preencha email e senha");
       return;
     }
     setLoading(true);
@@ -137,12 +133,8 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
           email,
-          phone: phone || undefined,
           password,
-          level,
-          orgId: org.id,
         }),
       });
 
@@ -327,15 +319,9 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
                 {/* New student register */}
                 <TabsContent value="new" className="mt-6">
                   <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
-                    <div className="space-y-2">
-                      <Label className="font-semibold">Nome completo</Label>
-                      <Input
-                        placeholder="Seu nome"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Crie sua conta com email e senha. Complete nome e telefone depois no app.
+                    </p>
                     <div className="space-y-2">
                       <Label className="font-semibold">Email</Label>
                       <Input
@@ -343,16 +329,6 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
                         placeholder="seu@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-semibold">WhatsApp</Label>
-                      <Input
-                        type="tel"
-                        placeholder="(85) 99999-9999"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
                         className="h-12"
                       />
                     </div>
@@ -365,29 +341,6 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
                         onChange={(e) => setPassword(e.target.value)}
                         className="h-12"
                       />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="font-semibold">Nível de experiência</Label>
-                      <RadioGroup
-                        value={level}
-                        onValueChange={setLevel}
-                        className="space-y-2"
-                      >
-                        {Object.entries(EXPERIENCE_LEVEL_LABELS).map(([value, label]) => (
-                          <div
-                            key={value}
-                            className="flex items-center gap-3 rounded-lg border p-3"
-                          >
-                            <RadioGroupItem value={value} id={`level-${value}`} />
-                            <Label
-                              htmlFor={`level-${value}`}
-                              className="flex-1 cursor-pointer font-normal"
-                            >
-                              {label}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
                     </div>
                     <Button
                       onClick={handleRegister}

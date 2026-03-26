@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     prisma.organizations.findFirst({
       where: { id: organizationId, deleted_at: null },
-      select: { name: true },
+      select: { name: true, slug: true },
     }),
     prisma.members.count({
       where: {
@@ -196,7 +196,7 @@ export default async function AdminDashboardPage() {
             <span className="text-left font-medium leading-snug">Ver convites</span>
           </Link>
           <Link
-            href={`/escola/${organizationId}`}
+            href={`/escola/${org?.slug ?? organizationId}`}
             className={quickActionClass}
             target="_blank"
             rel="noopener noreferrer"

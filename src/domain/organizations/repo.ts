@@ -1,15 +1,31 @@
 import { prisma } from "@/lib/db";
+import { slugify } from "@/lib/slug";
 import type { CreateOrganizationInput, UpdateOrganizationInput } from "./schema";
 import type { Organization, OrganizationWithSpots } from "./types";
+
+async function generateUniqueOrgSlug(baseName: string): Promise<string> {
+  let candidate = slugify(baseName) || "escola";
+  let n = 0;
+  for (;;) {
+    const existing = await prisma.organizations.findFirst({
+      where: { slug: candidate, deleted_at: null },
+    });
+    if (!existing) return candidate;
+    n += 1;
+    candidate = `${slugify(baseName) || "escola"}-${n}`;
+  }
+}
 
 function mapOrganization(row: {
   id: number;
   uuid: string;
   name: string;
+  slug: string;
   description: string | null;
   site: string | null;
   instagram: string | null;
   avatar: string | null;
+  hero_image: string | null;
   whatsapp: string | null;
   settings: unknown;
   created_at: Date;
@@ -38,6 +54,13 @@ export async function getById(id: number): Promise<Organization | null> {
   return row ? mapOrganization(row) : null;
 }
 
+export async function getBySlug(slug: string): Promise<Organization | null> {
+  const row = await prisma.organizations.findFirst({
+    where: { slug, deleted_at: null },
+  });
+  return row ? mapOrganization(row) : null;
+}
+
 export async function getByIdWithSpots(id: number): Promise<OrganizationWithSpots | null> {
   const row = await prisma.organizations.findFirst({
     where: { id, deleted_at: null },
@@ -56,9 +79,14 @@ export async function getByIdWithSpots(id: number): Promise<OrganizationWithSpot
 
 export async function create(data: CreateOrganizationInput) {
   const site = data.site === "" ? null : data.site;
+  const slug =
+    data.slug && data.slug.trim().length > 0
+      ? slugify(data.slug)
+      : await generateUniqueOrgSlug(data.name);
   return prisma.organizations.create({
     data: {
       name: data.name,
+      slug,
       description: data.description,
       site: site ?? undefined,
       instagram: data.instagram,
@@ -84,6 +112,10 @@ export async function update(id: number, data: UpdateOrganizationInput) {
       ...(site !== undefined && { site }),
       ...(data.instagram !== undefined && { instagram: data.instagram }),
       ...(data.avatar !== undefined && { avatar: data.avatar }),
+      ...(data.hero_image !== undefined && { hero_image: data.hero_image }),
+      ...(data.slug !== undefined && data.slug !== null && data.slug !== ""
+        ? { slug: slugify(data.slug) }
+        : {}),
       ...(data.whatsapp !== undefined && { whatsapp: data.whatsapp }),
     },
   });

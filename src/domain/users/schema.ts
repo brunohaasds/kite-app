@@ -24,6 +24,13 @@ export const registerStudentSchema = z.object({
   orgId: z.number().int().positive(),
 });
 
+/** Cadastro público: só conta; vínculo com escola no primeiro agendamento. */
+export const registerStudentMinimalSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
+export type RegisterStudentMinimalInput = z.infer<typeof registerStudentMinimalSchema>;

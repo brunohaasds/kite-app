@@ -35,7 +35,9 @@ export async function findBySlug(slug: string) {
     where: { slug, deleted_at: null },
     include: {
       parent_spot: { select: { id: true, name: true, slug: true } },
-      owner_organization: { select: { id: true, name: true, avatar: true } },
+      owner_organization: {
+        select: { id: true, name: true, avatar: true, slug: true },
+      },
       children: {
         where: { deleted_at: null },
         include: {
@@ -47,7 +49,13 @@ export async function findBySlug(slug: string) {
         where: { deleted_at: null },
         include: {
           organization: {
-            select: { id: true, name: true, avatar: true, description: true },
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              description: true,
+              slug: true,
+            },
           },
         },
       },
@@ -55,10 +63,51 @@ export async function findBySlug(slug: string) {
         where: { status: "approved" },
         include: {
           organization: {
-            select: { id: true, name: true, avatar: true, description: true },
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              description: true,
+              slug: true,
+            },
           },
         },
       },
+    },
+  });
+}
+
+export async function listPublicDirectory(filters: {
+  country?: string;
+  state?: string;
+  q?: string;
+}) {
+  const q = filters.q?.trim();
+  return prisma.global_spots.findMany({
+    where: {
+      deleted_at: null,
+      parent_spot_id: null,
+      ...(filters.country && { country: filters.country }),
+      ...(filters.state && { state: filters.state }),
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { slug: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      image: true,
+      country: true,
+      state: true,
+      access: true,
     },
   });
 }
@@ -88,6 +137,8 @@ export async function create(data: CreateGlobalSpotInput) {
       name: data.name,
       slug: data.slug,
       access: data.access,
+      country: data.country ?? null,
+      state: data.state ?? null,
       description: data.description ?? null,
       image: data.image ?? null,
       tips: data.tips ?? undefined,
@@ -109,6 +160,8 @@ export async function update(id: number, data: Omit<UpdateGlobalSpotInput, "id">
       ...(data.access !== undefined && { access: data.access }),
       ...(data.description !== undefined && { description: data.description }),
       ...(data.image !== undefined && { image: data.image }),
+      ...(data.country !== undefined && { country: data.country }),
+      ...(data.state !== undefined && { state: data.state }),
       ...(data.tips !== undefined && { tips: data.tips ?? undefined }),
       ...(data.services !== undefined && { services: data.services ?? undefined }),
       ...(data.latitude !== undefined && { latitude: data.latitude }),

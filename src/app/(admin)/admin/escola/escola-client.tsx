@@ -14,6 +14,7 @@ interface OrgData {
   name: string;
   description: string | null;
   avatar: string | null;
+  hero_image: string | null;
   whatsapp: string | null;
   instagram: string | null;
   site: string | null;
@@ -23,6 +24,7 @@ export function EscolaClient({ org }: { org: OrgData }) {
   const [name, setName] = useState(org.name);
   const [description, setDescription] = useState(org.description ?? "");
   const [avatar, setAvatar] = useState(org.avatar ?? "");
+  const [heroImage, setHeroImage] = useState(org.hero_image ?? "");
   const [whatsapp, setWhatsapp] = useState(org.whatsapp ?? "");
   const [instagram, setInstagram] = useState(org.instagram ?? "");
   const [site, setSite] = useState(org.site ?? "");
@@ -44,6 +46,7 @@ export function EscolaClient({ org }: { org: OrgData }) {
           name: name.trim(),
           description: description.trim() || null,
           avatar: avatar.trim() || null,
+          hero_image: heroImage.trim() || null,
           whatsapp: whatsapp.trim() || null,
           instagram: instagram.trim() || null,
           site: site.trim() || null,
@@ -80,8 +83,22 @@ export function EscolaClient({ org }: { org: OrgData }) {
             currentImageUrl={avatar || null}
             onUpload={(url) => setAvatar(url)}
             context="organizations"
+            purpose="logo"
             entityId={String(org.id)}
             size="lg"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Imagem de fundo do hero</Label>
+          <ImageUpload
+            currentImageUrl={heroImage || null}
+            onUpload={(url) => setHeroImage(url)}
+            context="organizations"
+            purpose="hero"
+            entityId={String(org.id)}
+            variant="cover"
+            description="Atrás do título na página pública (/escola/...). Paisagem recomendada. PNG, JPEG ou WebP até 2 MB; se vazio, usa o gradiente padrão."
           />
         </div>
 

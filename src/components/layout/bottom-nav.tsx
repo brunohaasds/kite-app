@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Zap, User, UserPlus, Camera } from "@/lib/icons";
+import { Calendar, Zap, User, UserPlus, Camera, MapPin } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import {
   STUDENT_NAV_ITEMS,
@@ -16,6 +16,7 @@ const iconMap: Record<string, React.ElementType> = {
   User,
   UserPlus,
   Camera,
+  MapPin,
 };
 
 export function BottomNav() {
@@ -34,7 +35,11 @@ export function BottomNav() {
       <div className="mx-auto flex max-w-[480px] items-center justify-around">
         {navItems.map((item) => {
           const Icon = iconMap[item.icon];
-          const isActive = pathname.startsWith(item.href);
+          const isActive =
+            item.href === "/aluno/spots"
+              ? pathname.startsWith("/aluno/spots") ||
+                pathname.startsWith("/aluno/spot/")
+              : pathname.startsWith(item.href);
 
           return (
             <Link

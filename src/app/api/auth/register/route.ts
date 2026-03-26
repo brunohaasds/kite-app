@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { registerStudentSchema } from "@/domain/users/schema";
+import { registerStudentMinimalSchema } from "@/domain/users/schema";
 import { getByEmail } from "@/domain/users/repo";
-import { registerStudent } from "@/domain/users/service";
+import { registerStudentMinimal } from "@/domain/users/service";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const parsed = registerStudentSchema.safeParse(body);
+    const parsed = registerStudentMinimalSchema.safeParse(body);
 
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Dados inválidos";
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { name, email, phone, password, level, orgId } = parsed.data;
+    const { email, password } = parsed.data;
 
     const existing = await getByEmail(email);
     if (existing) {
@@ -23,13 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    await registerStudent(orgId, {
-      name,
-      email,
-      phone,
-      password,
-      level: level ?? null,
-    });
+    await registerStudentMinimal({ email, password });
 
     return NextResponse.json({ success: true });
   } catch {

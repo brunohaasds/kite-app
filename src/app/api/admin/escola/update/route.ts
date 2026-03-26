@@ -7,6 +7,7 @@ const bodySchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   description: z.string().nullable().optional(),
   avatar: z.string().nullable().optional(),
+  hero_image: z.string().nullable().optional(),
   whatsapp: z.string().nullable().optional(),
   instagram: z.string().nullable().optional(),
   site: z.string().nullable().optional(),
@@ -28,12 +29,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" }, { status: 400 });
     }
 
-    const { name, description, avatar, whatsapp, instagram, site } = parsed.data;
+    const { name, description, avatar, hero_image, whatsapp, instagram, site } =
+      parsed.data;
 
     await update(orgId, {
       name: name.trim(),
       description: description ?? undefined,
       avatar: avatar ?? undefined,
+      hero_image: hero_image ?? undefined,
       whatsapp: whatsapp ?? undefined,
       instagram: instagram ?? undefined,
       site: site ?? undefined,

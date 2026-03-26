@@ -40,6 +40,8 @@ interface SpotRow {
   uuid: string;
   name: string;
   slug: string;
+  country: string | null;
+  state: string | null;
   access: "public" | "private";
   description: string | null;
   image: string | null;
@@ -62,6 +64,8 @@ interface Org {
 interface FormData {
   name: string;
   slug: string;
+  country: string;
+  state: string;
   access: "public" | "private";
   description: string;
   image: string;
@@ -74,6 +78,8 @@ interface FormData {
 const emptyForm: FormData = {
   name: "",
   slug: "",
+  country: "",
+  state: "",
   access: "public",
   description: "",
   image: "",
@@ -119,6 +125,8 @@ export function SpotsClient({
       const parts = [
         s.name,
         s.slug,
+        s.country ?? "",
+        s.state ?? "",
         s.owner_organization?.name ?? "",
         s.parent_spot?.name ?? "",
         s.parent_spot?.slug ?? "",
@@ -138,6 +146,8 @@ export function SpotsClient({
     setForm({
       name: spot.name,
       slug: spot.slug,
+      country: spot.country ?? "",
+      state: spot.state ?? "",
       access: spot.access,
       description: spot.description ?? "",
       image: spot.image ?? "",
@@ -177,6 +187,8 @@ export function SpotsClient({
         slug: form.slug.trim(),
         access: form.access,
         description: form.description.trim() || null,
+        country: form.country.trim() || null,
+        state: form.state.trim() || null,
         image: form.image.trim() || null,
         tips: form.tips.length > 0 ? form.tips : null,
         services: form.services.length > 0 ? form.services : null,
@@ -259,6 +271,12 @@ export function SpotsClient({
             </div>
             <p className="text-sm text-muted-foreground truncate">
               /{spot.slug}
+              {(spot.state || spot.country) && (
+                <>
+                  {" "}
+                  · {[spot.state, spot.country].filter(Boolean).join(", ")}
+                </>
+              )}
               {spot.owner_organization && (
                 <> · Dono: {spot.owner_organization.name}</>
               )}
@@ -380,12 +398,19 @@ export function SpotsClient({
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="flex justify-center">
+            <div className="space-y-2">
+              <Label>Imagem de fundo do hero (página pública)</Label>
               <ImageUpload
                 currentImageUrl={form.image || null}
                 onUpload={(url) => setForm((f) => ({ ...f, image: url }))}
-                context="organizations"
-                size="lg"
+                context="global_spots"
+                entityId={editingId ? String(editingId) : undefined}
+                variant="cover"
+                description={
+                  editingId
+                    ? "PNG, JPEG ou WebP até 2 MB."
+                    : "Salve o spot uma vez para obter ID; depois edite para enviar a imagem, ou envie após criar."
+                }
               />
             </div>
 
@@ -405,6 +430,29 @@ export function SpotsClient({
                   value={form.slug}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>País</Label>
+                <Input
+                  placeholder="Brasil"
+                  value={form.country}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, country: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado / região</Label>
+                <Input
+                  placeholder="CE"
+                  value={form.state}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, state: e.target.value }))
                   }
                 />
               </div>
