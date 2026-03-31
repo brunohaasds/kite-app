@@ -327,23 +327,29 @@ export function AlunoDetailClient({
                 )}
               </div>
               {(p.status === "pending" || p.status === "overdue") && (
-                <div className="flex gap-2 mt-3">
+                <div className="mt-3 flex items-center gap-1">
                   <Button
-                    size="sm"
-                    variant="outline"
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    title="Marcar parcela como paga"
                     onClick={() => setPayDialog({ open: true, payment: p })}
                   >
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    Marcar paga
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="sr-only">Marcar parcela como paga</span>
                   </Button>
                   {student.phone && (
                     <Button
-                      size="sm"
+                      type="button"
                       variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      title="Cobrar via WhatsApp"
                       onClick={() => openWhatsappPayment(p)}
                     >
-                      <MessageCircle className="mr-1 h-3.5 w-3.5" />
-                      Cobrar
+                      <MessageCircle className="h-4 w-4" />
+                      <span className="sr-only">Cobrar via WhatsApp</span>
                     </Button>
                   )}
                 </div>

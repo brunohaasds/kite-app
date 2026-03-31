@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { updateUserBySuperAdmin } from "@/domain/users/service";
 
 const bodySchema = z.object({
   userId: z.number().int().positive(),
@@ -22,32 +22,20 @@ export async function POST(req: Request) {
     }
 
     const { userId, name, phone } = parsed.data;
-    if (userId === Number(session.user.id)) {
-      return NextResponse.json(
-        { error: "Use a página de conta para editar seu próprio perfil." },
-        { status: 400 },
-      );
-    }
+    const actorId = Number(session.user.id);
 
-    const target = await prisma.users.findFirst({
-      where: { id: userId, deleted_at: null },
-    });
-    if (!target) {
-      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
-    }
-
-    await prisma.users.update({
-      where: { id: userId },
-      data: {
-        ...(name !== undefined ? { name } : {}),
-        ...(phone !== undefined
-          ? { phone: phone === "" ? null : phone }
-          : {}),
-      },
+    await updateUserBySuperAdmin(userId, actorId, {
+      ...(name !== undefined && { name }),
+      ...(phone !== undefined && { phone }),
     });
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Erro interno";
+    const status =
+      message.includes("próprio perfil") || message.includes("não encontrado")
+        ? 400
+        : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

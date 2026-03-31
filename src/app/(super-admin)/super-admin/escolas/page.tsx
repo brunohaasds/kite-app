@@ -17,7 +17,13 @@ export default async function SuperAdminEscolasPage() {
     select: {
       id: true,
       name: true,
+      slug: true,
+      description: true,
+      site: true,
+      instagram: true,
       avatar: true,
+      hero_image: true,
+      whatsapp: true,
       _count: {
         select: {
           students: { where: { deleted_at: null } },
@@ -32,7 +38,13 @@ export default async function SuperAdminEscolasPage() {
   const serialized = organizations.map((o) => ({
     id: o.id,
     name: o.name,
+    slug: o.slug,
+    description: o.description,
+    site: o.site,
+    instagram: o.instagram,
     avatar: o.avatar,
+    hero_image: o.hero_image,
+    whatsapp: o.whatsapp,
     studentCount: o._count.students,
     instructorCount: o._count.instructors,
     spotCount: o._count.spots,

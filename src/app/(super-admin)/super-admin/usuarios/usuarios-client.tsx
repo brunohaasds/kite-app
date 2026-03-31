@@ -16,16 +16,37 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { UserCircle, Search, Pencil, Mail, Phone } from "@/lib/icons";
+import {
+  UserCircle,
+  Search,
+  Pencil,
+  Mail,
+  Phone,
+  Plus,
+  Loader2,
+} from "@/lib/icons";
 import { USER_ROLE_LABELS } from "@/lib/constants";
+import {
+  createUserSuperAdminAction,
+  updateUserSuperAdminAction,
+} from "./actions";
 
 const ROLE_FILTER_VALUES = [
   "all",
+  "superadmin",
+  "admin",
+  "instructor",
+  "student",
+  "service_provider",
+] as const;
+
+const EDITABLE_ROLES = [
   "superadmin",
   "admin",
   "instructor",
@@ -65,6 +86,10 @@ function roleBadgeVariant(
   return "secondary";
 }
 
+function needsOrganization(role: string) {
+  return role === "admin" || role === "instructor" || role === "student";
+}
+
 export function UsuariosClient({
   users,
   organizations,
@@ -78,10 +103,24 @@ export function UsuariosClient({
   const [filterOrgId, setFilterOrgId] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [search, setSearch] = useState("");
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [cName, setCName] = useState("");
+  const [cEmail, setCEmail] = useState("");
+  const [cPhone, setCPhone] = useState("");
+  const [cPassword, setCPassword] = useState("");
+  const [cRole, setCRole] = useState<string>("student");
+  const [cOrgId, setCOrgId] = useState<string>("");
+  const [cSaving, setCSaving] = useState(false);
+
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<UserRow | null>(null);
   const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editOrgId, setEditOrgId] = useState("");
+  const [editPassword, setEditPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
   const filtered = useMemo(() => {
@@ -106,11 +145,70 @@ export function UsuariosClient({
     );
   }, [users, filterOrgId, filterRole, search]);
 
+  function openCreate() {
+    setCName("");
+    setCEmail("");
+    setCPhone("");
+    setCPassword("");
+    setCRole("student");
+    setCOrgId(organizations[0] ? String(organizations[0].id) : "");
+    setCreateOpen(true);
+  }
+
   function openEdit(u: UserRow) {
     setEditing(u);
     setEditName(u.name);
+    setEditEmail(u.email);
     setEditPhone(u.phone ?? "");
+    setEditRole(u.role);
+    setEditOrgId(
+      u.organizations[0] ? String(u.organizations[0].id) : "",
+    );
+    setEditPassword("");
     setEditOpen(true);
+  }
+
+  async function saveCreate() {
+    const nameTrim = cName.trim();
+    if (!nameTrim) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    if (!cEmail.trim()) {
+      toast.error("Email é obrigatório");
+      return;
+    }
+    if (cPassword.length < 6) {
+      toast.error("Senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    if (needsOrganization(cRole) && !cOrgId) {
+      toast.error("Selecione uma escola");
+      return;
+    }
+    setCSaving(true);
+    try {
+      const payload = {
+        name: nameTrim,
+        email: cEmail.trim(),
+        phone: cPhone.trim(),
+        password: cPassword,
+        role: cRole,
+        organizationId: needsOrganization(cRole)
+          ? parseInt(cOrgId, 10)
+          : undefined,
+      };
+      const result = await createUserSuperAdminAction(payload);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Usuário criado");
+      setCreateOpen(false);
+      router.refresh();
+    } finally {
+      setCSaving(false);
+    }
   }
 
   async function saveEdit() {
@@ -120,27 +218,44 @@ export function UsuariosClient({
       toast.error("Nome é obrigatório");
       return;
     }
+    if (!editEmail.trim()) {
+      toast.error("Email é obrigatório");
+      return;
+    }
+    if (needsOrganization(editRole) && !editOrgId) {
+      toast.error("Selecione uma escola para este perfil");
+      return;
+    }
     setSaving(true);
     try {
-      const res = await fetch("/api/super-admin/users/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: editing.id,
-          name: nameTrim,
-          phone: editPhone.trim(),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error ?? "Erro ao salvar");
+      const payload: {
+        name: string;
+        email: string;
+        phone: string;
+        role: string;
+        organizationId?: number;
+        password?: string;
+      } = {
+        name: nameTrim,
+        email: editEmail.trim(),
+        phone: editPhone.trim(),
+        role: editRole,
+      };
+      if (needsOrganization(editRole)) {
+        payload.organizationId = parseInt(editOrgId, 10);
+      }
+      if (editPassword.trim().length > 0) {
+        payload.password = editPassword.trim();
+      }
+      const result = await updateUserSuperAdminAction(editing.id, payload);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
       toast.success("Usuário atualizado");
       setEditOpen(false);
       setEditing(null);
       router.refresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
     } finally {
       setSaving(false);
     }
@@ -148,12 +263,21 @@ export function UsuariosClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Usuários</h1>
-        <p className="text-muted-foreground text-sm">
-          Todos os perfis do sistema (super admin, admin, instrutor, aluno,
-          prestador). {filtered.length} de {users.length} usuários
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Usuários</h1>
+          <p className="text-muted-foreground text-sm">
+            Todos os perfis do sistema. {filtered.length} de {users.length}{" "}
+            usuários
+          </p>
+        </div>
+        <Button
+          onClick={openCreate}
+          className="shrink-0 gap-2 bg-super-admin hover:bg-super-admin/90"
+        >
+          <Plus className="h-4 w-4" />
+          Novo usuário
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -279,16 +403,14 @@ export function UsuariosClient({
                     </td>
                     <td className="px-4 py-3 align-top">
                       {u.id === currentUserId ? (
-                        <span className="text-xs text-muted-foreground">
-                          —
-                        </span>
+                        <span className="text-xs text-muted-foreground">—</span>
                       ) : (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          title="Editar nome e telefone"
+                          title="Editar usuário"
                           onClick={() => openEdit(u)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -303,47 +425,222 @@ export function UsuariosClient({
         </div>
       )}
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => !cSaving && setCreateOpen(open)}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar usuário</DialogTitle>
+            <DialogTitle>Novo usuário</DialogTitle>
+            <DialogDescription>
+              Preencha nome, contato e perfil; defina a senha inicial por último.
+            </DialogDescription>
           </DialogHeader>
-          {editing && (
-            <div className="space-y-3 py-2">
-              <p className="text-sm text-muted-foreground break-all">
-                {editing.email}
-              </p>
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Nome</Label>
-                <Input
-                  id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-phone">Telefone</Label>
-                <Input
-                  id="edit-phone"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  placeholder="Opcional"
-                />
-              </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="c-name">Nome</Label>
+              <Input
+                id="c-name"
+                value={cName}
+                onChange={(e) => setCName(e.target.value)}
+                placeholder="Nome completo"
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label htmlFor="c-email">Email</Label>
+              <Input
+                id="c-email"
+                type="email"
+                value={cEmail}
+                onChange={(e) => setCEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="c-phone">Telefone</Label>
+              <Input
+                id="c-phone"
+                value={cPhone}
+                onChange={(e) => setCPhone(e.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Perfil</Label>
+              <Select value={cRole} onValueChange={setCRole}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EDITABLE_ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {USER_ROLE_LABELS[r] ?? r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {needsOrganization(cRole) && (
+              <div className="space-y-2">
+                <Label>Escola</Label>
+                <Select value={cOrgId} onValueChange={setCOrgId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations.map((org) => (
+                      <SelectItem key={org.id} value={String(org.id)}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="c-pass">Senha inicial</Label>
+              <Input
+                id="c-pass"
+                type="password"
+                value={cPassword}
+                onChange={(e) => setCPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+          </div>
+
           <DialogFooter>
             <Button
+              type="button"
               variant="outline"
-              onClick={() => setEditOpen(false)}
-              disabled={saving}
+              onClick={() => setCreateOpen(false)}
+              disabled={cSaving}
             >
               Cancelar
             </Button>
-            <Button onClick={() => void saveEdit()} disabled={saving}>
-              {saving ? "Salvando…" : "Salvar"}
+            <Button
+              type="button"
+              disabled={cSaving}
+              onClick={() => void saveCreate()}
+            >
+              {cSaving && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Criar usuário
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) => !saving && setEditOpen(open)}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar usuário</DialogTitle>
+            <DialogDescription>
+              Atualize dados e, se precisar, defina uma nova senha.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editing ? (
+            <>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="e-name">Nome</Label>
+                  <Input
+                    id="e-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="e-email">Email</Label>
+                  <Input
+                    id="e-email"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="e-phone">Telefone</Label>
+                  <Input
+                    id="e-phone"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Opcional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Perfil</Label>
+                  <Select value={editRole} onValueChange={setEditRole}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EDITABLE_ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {USER_ROLE_LABELS[r] ?? r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {needsOrganization(editRole) && (
+                  <div className="space-y-2">
+                    <Label>Escola</Label>
+                    <Select value={editOrgId} onValueChange={setEditOrgId}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={String(org.id)}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="e-pass">Nova senha</Label>
+                  <Input
+                    id="e-pass"
+                    type="password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    placeholder="Deixe vazio para manter"
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(false)}
+                  disabled={saving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void saveEdit()}
+                >
+                  {saving && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

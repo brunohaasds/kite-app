@@ -822,28 +822,43 @@ function SessionCard({
         </div>
 
         {!isDone && (
-          <div className="flex flex-col gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1">
             {onComplete && (
-              <Button size="sm" variant="outline" onClick={onComplete}>
-                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                Finalizar
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                title="Finalizar aula"
+                onClick={onComplete}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="sr-only">Finalizar aula</span>
               </Button>
             )}
             {onCancel && (
-              <Button size="sm" variant="outline" className="text-destructive" onClick={onCancel}>
-                <X className="mr-1 h-3.5 w-3.5" />
-                Cancelar
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                title="Cancelar aula"
+                onClick={onCancel}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Cancelar aula</span>
               </Button>
             )}
             {session.studentPhone && (
-              <Button size="sm" variant="ghost" asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
                 <a
                   href={whatsappLink(session.studentPhone)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Abrir WhatsApp do aluno"
                 >
-                  <MessageCircle className="mr-1 h-3.5 w-3.5" />
-                  WhatsApp
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="sr-only">WhatsApp do aluno</span>
                 </a>
               </Button>
             )}

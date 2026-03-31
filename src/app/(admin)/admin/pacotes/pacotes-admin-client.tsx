@@ -15,7 +15,16 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Package, Users, Calendar, Trash2, Loader2 } from "@/lib/icons";
+import {
+  Plus,
+  Package,
+  Users,
+  Calendar,
+  Pencil,
+  Power,
+  Trash2,
+  Loader2,
+} from "@/lib/icons";
 import { toast } from "sonner";
 import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
@@ -220,31 +229,44 @@ export function PacotesAdminClient({
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1.5 shrink-0">
+                <div className="flex shrink-0 items-center gap-1">
                   <Button
-                    size="sm"
-                    variant="outline"
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    title="Editar pacote"
                     onClick={() => openEdit(pkg)}
                   >
-                    Editar
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Editar pacote</span>
                   </Button>
                   <Button
-                    size="sm"
+                    type="button"
                     variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
+                    title={pkg.active ? "Desativar pacote" : "Ativar pacote"}
                     onClick={() => handleToggleActive(pkg)}
                   >
-                    {pkg.active ? "Desativar" : "Ativar"}
+                    <Power className="h-4 w-4" />
+                    <span className="sr-only">
+                      {pkg.active ? "Desativar pacote" : "Ativar pacote"}
+                    </span>
                   </Button>
                   <Button
-                    size="sm"
+                    type="button"
                     variant="ghost"
-                    className="text-destructive"
+                    size="icon"
+                    className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                    title="Excluir pacote"
                     onClick={() => {
                       setDeletingUuid(pkg.uuid);
                       setDeleteOpen(true);
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Excluir pacote</span>
                   </Button>
                 </div>
               </div>

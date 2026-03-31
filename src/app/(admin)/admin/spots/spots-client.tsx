@@ -12,7 +12,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { MapPin, Check, X, Globe, Shield, Loader2 } from "@/lib/icons";
+import {
+  MapPin,
+  Check,
+  Globe,
+  Shield,
+  Loader2,
+  Link2,
+  Unlink,
+} from "@/lib/icons";
 import { AdminSchoolPageHeader } from "@/components/layout/admin-school-page-header";
 
 interface GlobalSpotRow {
@@ -166,9 +174,11 @@ export function SpotsClient({
                   <div className="shrink-0">
                     {isLinked ? (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                        title="Desvincular spot da escola"
                         disabled={loading === spot.id}
                         onClick={() => {
                           setUnlinkingId(spot.id);
@@ -178,24 +188,26 @@ export function SpotsClient({
                         {loading === spot.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <>
-                            <X className="mr-1 h-3 w-3" />
-                            Desvincular
-                          </>
+                          <Unlink className="h-4 w-4" />
                         )}
+                        <span className="sr-only">Desvincular spot</span>
                       </Button>
                     ) : (
                       <Button
-                        variant="outline"
-                        size="sm"
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        title="Vincular spot à escola"
                         disabled={loading === spot.id}
                         onClick={() => handleLink(spot.id)}
                       >
                         {loading === spot.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Vincular"
+                          <Link2 className="h-4 w-4" />
                         )}
+                        <span className="sr-only">Vincular spot</span>
                       </Button>
                     )}
                   </div>

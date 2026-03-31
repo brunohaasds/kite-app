@@ -16,6 +16,27 @@ async function generateUniqueOrgSlug(baseName: string): Promise<string> {
   }
 }
 
+/** Garante slug único a partir de um base já slugificado (ex.: manual). */
+async function allocateUniqueOrgSlug(
+  baseSlug: string,
+  excludeOrgId?: number,
+): Promise<string> {
+  let candidate = baseSlug || "escola";
+  let n = 0;
+  for (;;) {
+    const existing = await prisma.organizations.findFirst({
+      where: {
+        slug: candidate,
+        deleted_at: null,
+        ...(excludeOrgId !== undefined ? { id: { not: excludeOrgId } } : {}),
+      },
+    });
+    if (!existing) return candidate;
+    n += 1;
+    candidate = `${baseSlug || "escola"}-${n}`;
+  }
+}
+
 function mapOrganization(row: {
   id: number;
   uuid: string;
@@ -118,20 +139,39 @@ export async function getByIdWithSpots(id: number): Promise<OrganizationWithSpot
 }
 
 export async function create(data: CreateOrganizationInput) {
-  const site = data.site === "" ? null : data.site;
+  const site =
+    data.site === undefined || data.site === "" ? null : data.site;
   const slug =
     data.slug && data.slug.trim().length > 0
-      ? slugify(data.slug)
+      ? await allocateUniqueOrgSlug(slugify(data.slug))
       : await generateUniqueOrgSlug(data.name);
   return prisma.organizations.create({
     data: {
       name: data.name,
       slug,
-      description: data.description,
+      description:
+        data.description === "" || data.description === undefined
+          ? null
+          : data.description,
       site: site ?? undefined,
-      instagram: data.instagram,
-      avatar: data.avatar,
-      whatsapp: data.whatsapp,
+      instagram:
+        data.instagram === "" || data.instagram === undefined
+          ? null
+          : data.instagram,
+      avatar:
+        data.avatar === "" || data.avatar === undefined || data.avatar === null
+          ? null
+          : data.avatar,
+      hero_image:
+        data.hero_image === "" ||
+        data.hero_image === undefined ||
+        data.hero_image === null
+          ? null
+          : data.hero_image,
+      whatsapp:
+        data.whatsapp === "" || data.whatsapp === undefined
+          ? null
+          : data.whatsapp,
     },
   });
 }
@@ -143,20 +183,45 @@ export async function update(id: number, data: UpdateOrganizationInput) {
   if (!existing) {
     throw new Error("Organização não encontrada");
   }
-  const site = data.site !== undefined ? (data.site === "" ? null : data.site) : undefined;
+  const site =
+    data.site !== undefined ? (data.site === "" ? null : data.site) : undefined;
+
+  let nextSlug: string | undefined;
+  if (
+    data.slug !== undefined &&
+    data.slug !== null &&
+    data.slug.trim() !== ""
+  ) {
+    const normalized = slugify(data.slug);
+    nextSlug = await allocateUniqueOrgSlug(normalized, id);
+  }
+
   return prisma.organizations.update({
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name }),
-      ...(data.description !== undefined && { description: data.description }),
+      ...(data.description !== undefined && {
+        description:
+          data.description === "" ? null : data.description,
+      }),
       ...(site !== undefined && { site }),
-      ...(data.instagram !== undefined && { instagram: data.instagram }),
-      ...(data.avatar !== undefined && { avatar: data.avatar }),
-      ...(data.hero_image !== undefined && { hero_image: data.hero_image }),
-      ...(data.slug !== undefined && data.slug !== null && data.slug !== ""
-        ? { slug: slugify(data.slug) }
-        : {}),
-      ...(data.whatsapp !== undefined && { whatsapp: data.whatsapp }),
+      ...(data.instagram !== undefined && {
+        instagram: data.instagram === "" ? null : data.instagram,
+      }),
+      ...(data.avatar !== undefined && {
+        avatar:
+          data.avatar === "" || data.avatar === null ? null : data.avatar,
+      }),
+      ...(data.hero_image !== undefined && {
+        hero_image:
+          data.hero_image === "" || data.hero_image === null
+            ? null
+            : data.hero_image,
+      }),
+      ...(nextSlug !== undefined && { slug: nextSlug }),
+      ...(data.whatsapp !== undefined && {
+        whatsapp: data.whatsapp === "" ? null : data.whatsapp,
+      }),
     },
   });
 }

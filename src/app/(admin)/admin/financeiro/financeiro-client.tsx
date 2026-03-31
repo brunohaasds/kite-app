@@ -242,36 +242,45 @@ export function FinanceiroClient({
                     </div>
 
                     {(p.status === "pending" || p.status === "overdue") && (
-                      <div className="flex flex-col gap-1.5 shrink-0">
+                      <div className="flex shrink-0 items-center gap-1">
                         <Button
-                          size="sm"
-                          variant="outline"
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9"
+                          title="Marcar como pago"
                           onClick={() =>
                             setPayDialog({ open: true, payment: p })
                           }
                         >
-                          <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                          Pagar
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span className="sr-only">Marcar como pago</span>
                         </Button>
                         {p.studentPhone && (
                           <Button
-                            size="sm"
+                            type="button"
                             variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            title="Cobrar via WhatsApp"
                             onClick={() =>
                               setWhatsappDialog({ open: true, payment: p })
                             }
                           >
-                            <MessageCircle className="mr-1 h-3.5 w-3.5" />
-                            Cobrar
+                            <MessageCircle className="h-4 w-4" />
+                            <span className="sr-only">Cobrar via WhatsApp</span>
                           </Button>
                         )}
                         <Button
-                          size="sm"
+                          type="button"
                           variant="ghost"
+                          size="icon"
+                          className="h-9 w-9"
+                          title="Copiar link de pagamento"
                           onClick={() => copyPaymentLink(p)}
                         >
-                          <Copy className="mr-1 h-3.5 w-3.5" />
-                          Link
+                          <Copy className="h-4 w-4" />
+                          <span className="sr-only">Copiar link de pagamento</span>
                         </Button>
                       </div>
                     )}
