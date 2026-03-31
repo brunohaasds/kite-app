@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Wind } from "@/lib/icons";
+import {
+  AuthNovaShell,
+  AuthNovaUnderlineField,
+} from "@/components/marketing/auth-nova-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { KeyRound, Mail } from "@/lib/icons";
 
 export function CadastroClient() {
   const router = useRouter();
@@ -63,68 +65,71 @@ export function CadastroClient() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 p-4">
-      <div className="w-full max-w-[400px] space-y-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-            <Wind className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Criar conta</h1>
-          <p className="text-center text-sm text-muted-foreground">
-            Apenas email e senha. Complete nome e telefone depois no app.
-          </p>
-        </div>
+    <AuthNovaShell>
+      <h1 className="sr-only">Criar conta na eKite</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirm">Confirmar senha</Label>
-            <Input
-              id="confirm"
-              type="password"
-              placeholder="Repita a senha"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Criando…" : "Criar conta"}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Já tem conta?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
-            Entrar
-          </Link>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          Nova conta
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Email e senha. Complete nome e telefone depois no app.
         </p>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthNovaUnderlineField
+          id="cadastro-email"
+          icon={Mail}
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <AuthNovaUnderlineField
+          id="cadastro-password"
+          icon={KeyRound}
+          label="Senha"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Mínimo 6 caracteres"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+        />
+
+        <AuthNovaUnderlineField
+          id="cadastro-confirm"
+          icon={KeyRound}
+          label="Confirmar senha"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Repita a senha"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          required
+        />
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="mt-2 h-12 w-full rounded-full text-base font-semibold shadow-md"
+        >
+          {loading ? "Criando…" : "Criar conta"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Já tem conta?{" "}
+        <Link href="/login" className="font-semibold text-primary hover:underline">
+          Entrar
+        </Link>
+      </p>
+    </AuthNovaShell>
   );
 }
