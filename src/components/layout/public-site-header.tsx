@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, Menu } from "@/lib/icons";
+import { Home, LayoutGrid, MapPin, Menu } from "@/lib/icons";
 import { KitesurfIcon } from "@/components/icons/kitesurf-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/sheet";
 import { AppLogo } from "@/components/shared/app-logo";
 import { cn } from "@/lib/utils";
+import { getAppHomePath } from "@/lib/auth-routes";
+import type { PublicNavSessionUser } from "@/components/layout/public-journey-shell";
 
 const NAV = [
   { href: "/home", label: "Início", Icon: Home },
@@ -62,8 +64,13 @@ function NavLinks({
   );
 }
 
-export function PublicSiteHeader() {
+export function PublicSiteHeader({
+  sessionUser = null,
+}: {
+  sessionUser?: PublicNavSessionUser;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const appHref = sessionUser ? getAppHomePath(sessionUser.role) : "/login";
 
   return (
     <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -77,9 +84,27 @@ export function PublicSiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
-            <Link href="/login">Entrar</Link>
-          </Button>
+          {sessionUser ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden gap-2 md:inline-flex"
+            >
+              <Link
+                href={appHref}
+                className="flex items-center gap-2"
+                aria-label="Abrir aplicação eKite"
+              >
+                <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                App
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+              <Link href="/login">Entrar</Link>
+            </Button>
+          )}
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden" aria-label="Menu">
@@ -92,11 +117,25 @@ export function PublicSiteHeader() {
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-4">
                 <NavLinks onNavigate={() => setMenuOpen(false)} />
-                <Button asChild className="w-full">
-                  <Link href="/login" onClick={() => setMenuOpen(false)}>
-                    Entrar
-                  </Link>
-                </Button>
+                {sessionUser ? (
+                  <Button asChild className="w-full gap-2">
+                    <Link
+                      href={appHref}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center justify-center gap-2"
+                      aria-label="Abrir aplicação eKite"
+                    >
+                      <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden />
+                      App
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild className="w-full">
+                    <Link href="/login" onClick={() => setMenuOpen(false)}>
+                      Entrar
+                    </Link>
+                  </Button>
+                )}
               </div>
             </SheetContent>
           </Sheet>

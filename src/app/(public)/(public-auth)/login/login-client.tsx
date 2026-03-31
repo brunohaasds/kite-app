@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getAppHomePath } from "@/lib/auth-routes";
 import { AppLogo } from "@/components/shared/app-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,19 +35,8 @@ export default function LoginClient() {
 
     const res = await fetch("/api/auth/session");
     const session = await res.json();
-    const role = session?.user?.role;
-
-    if (role === "superadmin") {
-      router.push("/super-admin");
-    } else if (role === "admin") {
-      router.push("/admin/agenda");
-    } else if (role === "instructor") {
-      router.push("/instrutor/agenda");
-    } else if (role === "service_provider") {
-      router.push("/prestador");
-    } else {
-      router.push("/aluno/aulas");
-    }
+    const role = session?.user?.role as string | undefined;
+    router.push(getAppHomePath(role));
   }
 
   return (

@@ -1,9 +1,9 @@
-import { PublicJourneyShell } from "@/components/layout/public-journey-shell";
+import { PublicJourneyShellWithAuth } from "@/components/layout/public-journey-shell-with-auth";
 
 export default function PublicSpotsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <PublicJourneyShell>{children}</PublicJourneyShell>;
+  return <PublicJourneyShellWithAuth>{children}</PublicJourneyShellWithAuth>;
 }

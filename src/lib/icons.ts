@@ -3,6 +3,7 @@ export {
   ArrowLeft,
   ChevronDown,
   ChevronRight,
+  LayoutGrid,
   Menu,
   X,
   LogOut,

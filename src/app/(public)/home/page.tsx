@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PublicJourneyShell } from "@/components/layout/public-journey-shell";
+import { PublicJourneyShellWithAuth } from "@/components/layout/public-journey-shell-with-auth";
 import { EkiteHomePage } from "@/components/marketing/ekite-home-page";
 
 export const metadata: Metadata = {
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 
 export default function MarketingHomePage() {
   return (
-    <PublicJourneyShell>
+    <PublicJourneyShellWithAuth>
       <EkiteHomePage />
-    </PublicJourneyShell>
+    </PublicJourneyShellWithAuth>
   );
 }
