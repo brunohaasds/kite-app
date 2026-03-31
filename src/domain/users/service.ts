@@ -116,6 +116,26 @@ async function assertEmailAvailable(email: string, excludeUserId?: number) {
   }
 }
 
+async function upsertMemberForOrg(
+  tx: Prisma.TransactionClient,
+  userId: number,
+  organizationId: number,
+) {
+  const row = await tx.members.findFirst({
+    where: { organization_id: organizationId, user_id: userId },
+  });
+  if (row) {
+    await tx.members.update({
+      where: { id: row.id },
+      data: { deleted_at: null },
+    });
+    return;
+  }
+  await tx.members.create({
+    data: { organization_id: organizationId, user_id: userId },
+  });
+}
+
 async function attachUserToOrganizationRole(
   tx: Prisma.TransactionClient,
   userId: number,
@@ -127,9 +147,7 @@ async function attachUserToOrganizationRole(
     data: { deleted_at: new Date() },
   });
 
-  await tx.members.create({
-    data: { organization_id: organizationId, user_id: userId },
-  });
+  await upsertMemberForOrg(tx, userId, organizationId);
 
   if (role === "admin") {
     await tx.students.updateMany({
