@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, Search } from "@/lib/icons";
+import { ListFilter, MapPin, Search } from "@/lib/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -47,6 +47,7 @@ export function SpotsDirectoryClient({
   const country = searchParams.get("country") ?? "";
   const state = searchParams.get("state") ?? "";
   const [qInput, setQInput] = useState(qUrl);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     setQInput(qUrl);
@@ -71,6 +72,10 @@ export function SpotsDirectoryClient({
     return () => clearTimeout(t);
   }, [qInput, qUrl, setParam]);
 
+  const hasActiveFilters = Boolean(
+    qUrl.trim() || country.trim() || state.trim(),
+  );
+
   const p = pathPrefix;
 
   return (
@@ -82,67 +87,99 @@ export function SpotsDirectoryClient({
       />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-2 md:px-6 lg:px-8">
-        <div className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
-            <div className="relative min-w-0 flex-1 md:min-w-[min(100%,280px)]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={qInput}
-                onChange={(e) => setQInput(e.target.value)}
-                placeholder="Buscar por nome..."
-                className="bg-background pl-9"
+        <div className="mb-3 flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="relative shrink-0 shadow-sm"
+            aria-expanded={filtersOpen}
+            aria-controls="spots-filtros-panel"
+            onClick={() => setFiltersOpen((open) => !open)}
+          >
+            <ListFilter className="size-4" aria-hidden />
+            <span className="sr-only">
+              {filtersOpen ? "Fechar filtros" : "Abrir filtros"}
+            </span>
+            {hasActiveFilters && !filtersOpen ? (
+              <span
+                className="absolute right-1 top-1 size-2 rounded-full bg-primary ring-2 ring-card"
+                aria-hidden
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:flex md:min-w-0 md:flex-1 md:gap-3">
-              <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
-                <Label className="text-xs">País</Label>
-                <Select
-                  value={country || "__all__"}
-                  onValueChange={(v) => setParam("country", v === "__all__" ? "" : v)}
-                >
-                  <SelectTrigger className="w-full bg-background">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Todos</SelectItem>
-                    {countries.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
-                <Label className="text-xs">Estado</Label>
-                <Select
-                  value={state || "__all__"}
-                  onValueChange={(v) => setParam("state", v === "__all__" ? "" : v)}
-                >
-                  <SelectTrigger className="w-full bg-background">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">Todos</SelectItem>
-                    {states.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              type="button"
-              className="w-full shrink-0 md:w-auto md:self-end"
-              onClick={() => router.push(spotsBase)}
-            >
-              Limpar filtros
-            </Button>
-          </div>
+            ) : null}
+          </Button>
         </div>
+
+        {filtersOpen ? (
+          <div
+            id="spots-filtros-panel"
+            className="rounded-xl border bg-card p-4 shadow-sm md:p-5"
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
+              <div className="relative min-w-0 flex-1 md:min-w-[min(100%,280px)]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={qInput}
+                  onChange={(e) => setQInput(e.target.value)}
+                  placeholder="Buscar por nome..."
+                  className="bg-background pl-9"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 md:flex md:min-w-0 md:flex-1 md:gap-3">
+                <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
+                  <Label className="text-xs">País</Label>
+                  <Select
+                    value={country || "__all__"}
+                    onValueChange={(v) =>
+                      setParam("country", v === "__all__" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">Todos</SelectItem>
+                      {countries.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="min-w-0 space-y-1.5 md:min-w-[160px] md:flex-1">
+                  <Label className="text-xs">Estado</Label>
+                  <Select
+                    value={state || "__all__"}
+                    onValueChange={(v) =>
+                      setParam("state", v === "__all__" ? "" : v)
+                    }
+                  >
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">Todos</SelectItem>
+                      {states.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                type="button"
+                className="w-full shrink-0 md:w-auto md:self-end"
+                onClick={() => router.push(spotsBase)}
+              >
+                Limpar filtros
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {initialSpots.length === 0 ? (

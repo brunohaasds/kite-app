@@ -8,6 +8,7 @@ export {
   X,
   LogOut,
   Home,
+  Map,
   Settings,
   Bell,
 
@@ -34,6 +35,8 @@ export {
   CheckCircle2,
   MessageCircle,
   Search,
+  ListFilter,
+  KeyRound,
   Eye,
   ExternalLink,
   Link2,

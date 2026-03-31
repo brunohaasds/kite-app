@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, LogIn, MapPin } from "@/lib/icons";
+import { Home, LayoutGrid, LogIn, Map, MapPin } from "@/lib/icons";
 import { KitesurfIcon } from "@/components/icons/kitesurf-icon";
 import { cn } from "@/lib/utils";
 import { PUBLIC_NAV_ITEMS } from "@/lib/constants";
@@ -12,11 +12,12 @@ import type { PublicNavSessionUser } from "@/components/layout/public-journey-sh
 const iconMap: Record<string, React.ElementType> = {
   Home,
   MapPin,
+  Map,
   Kitesurf: KitesurfIcon,
   LogIn,
 };
 
-const PRIMARY_NAV = PUBLIC_NAV_ITEMS.slice(0, 3);
+const PRIMARY_NAV = PUBLIC_NAV_ITEMS.slice(0, 4);
 
 function isAppShellPath(pathname: string) {
   return (
@@ -46,9 +47,11 @@ function PublicBottomNavBar({ sessionUser }: { sessionUser: PublicNavSessionUser
               ? pathname === "/home"
               : item.href === "/spots"
                 ? pathname === "/spots" || pathname.startsWith("/spot/")
-                : item.href === "/centers"
-                  ? pathname === "/centers" || pathname.startsWith("/escola/")
-                  : false;
+                : item.href === "/mapa"
+                  ? pathname === "/mapa"
+                  : item.href === "/centers"
+                    ? pathname === "/centers" || pathname.startsWith("/escola/")
+                    : false;
 
           return (
             <Link

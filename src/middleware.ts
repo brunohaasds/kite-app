@@ -19,6 +19,7 @@ export default auth((req) => {
     pathname.startsWith("/centers") ||
     pathname.startsWith("/escola") ||
     pathname.startsWith("/spot") ||
+    pathname.startsWith("/mapa") ||
     pathname.startsWith("/agendamento") ||
     pathname.startsWith("/convite") ||
     pathname.startsWith("/api/auth") ||

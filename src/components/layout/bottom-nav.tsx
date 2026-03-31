@@ -38,7 +38,8 @@ export function BottomNav() {
           const isActive =
             item.href === "/aluno/spots"
               ? pathname.startsWith("/aluno/spots") ||
-                pathname.startsWith("/aluno/spot/")
+                pathname.startsWith("/aluno/spot/") ||
+                pathname.startsWith("/aluno/mapa")
               : pathname.startsWith(item.href);
 
           return (
