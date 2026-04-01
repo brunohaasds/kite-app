@@ -23,6 +23,7 @@ export default auth((req) => {
     pathname.startsWith("/agendamento") ||
     pathname.startsWith("/convite") ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/internal") ||
     pathname.startsWith("/api/booking") ||
     pathname.startsWith("/api/service-bookings") ||
     pathname.startsWith("/api/invites") ||
