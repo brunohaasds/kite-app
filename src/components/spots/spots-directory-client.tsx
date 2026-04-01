@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { PublicDirectoryHero } from "@/components/public/public-directory-hero";
+import { EKITE_SPOTS_DIRECTORY_HERO_BG } from "@/lib/branding";
 import { cn } from "@/lib/utils";
 
 export type SpotRow = {
@@ -83,7 +84,7 @@ export function SpotsDirectoryClient({
       <PublicDirectoryHero
         title="Spots"
         subtitle="Explora onde aprender kitesurf, por região e nome."
-        backgroundImage={p === "" ? "/marketing/spots.jpg" : undefined}
+        backgroundImage={p === "" ? EKITE_SPOTS_DIRECTORY_HERO_BG : undefined}
       />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-2 md:px-6 lg:px-8">

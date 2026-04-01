@@ -40,6 +40,7 @@
     "TEMPLATES",
     "BRAIN",
     "prisma/seed.ts",
-    "ekite-landing-page"
+    "ekite-landing-page",
+    "ekite-landing-page (1)"
   ]
 }

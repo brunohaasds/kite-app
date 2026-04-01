@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   title: string;
   subtitle: string;
-  /** Caminho em `public/` (ex.: `/marketing/spots.jpg`). */
+  /** URL absoluta ou caminho em `public/` (ex.: `/marketing/spots.jpg`). */
   backgroundImage?: string;
 };
 

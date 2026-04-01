@@ -59,7 +59,9 @@ export {
   Globe,
 
   // Financial
+  BarChart3,
   DollarSign,
+  Gift,
   Package,
 
   // Status

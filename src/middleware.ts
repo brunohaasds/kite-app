@@ -17,6 +17,7 @@ export default auth((req) => {
     pathname.startsWith("/cadastro") ||
     pathname.startsWith("/home") ||
     pathname.startsWith("/inicio") ||
+    pathname.startsWith("/para-escolas") ||
     pathname.startsWith("/centers") ||
     pathname.startsWith("/escola") ||
     pathname.startsWith("/spot") ||

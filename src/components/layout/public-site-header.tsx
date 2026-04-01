@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Map, MapPin, Menu } from "@/lib/icons";
+import { Home, LayoutGrid, Map, MapPin, Menu, Store } from "@/lib/icons";
 import { KitesurfIcon } from "@/components/icons/kitesurf-icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import type { PublicNavSessionUser } from "@/components/layout/public-journey-sh
 
 const NAV = [
   { href: "/home", label: "Início", Icon: Home },
+  { href: "/para-escolas", label: "Para escolas", Icon: Store },
   { href: "/spots", label: "Spots", Icon: MapPin },
   { href: "/mapa", label: "Mapa", Icon: Map },
   { href: "/centers", label: "Centros", Icon: KitesurfIcon },
@@ -27,6 +28,7 @@ const NAV = [
 
 function isNavActive(href: string, pathname: string) {
   if (href === "/home") return pathname === "/home";
+  if (href === "/para-escolas") return pathname === "/para-escolas";
   if (href === "/spots") return pathname === "/spots" || pathname.startsWith("/spot/");
   if (href === "/mapa") return pathname === "/mapa";
   if (href === "/centers") return pathname === "/centers" || pathname.startsWith("/escola/");
