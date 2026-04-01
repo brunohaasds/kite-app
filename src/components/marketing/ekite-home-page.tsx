@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { EkiteHomeHeroMedia } from "@/components/marketing/ekite-home-hero-media";
 import { IconBox } from "@/components/marketing/icon-box";
 import { ModernCard } from "@/components/marketing/modern-card";
 import { AppLogo } from "@/components/shared/app-logo";
@@ -10,7 +12,7 @@ import {
   CheckCircle2,
   Compass,
   Map,
-  Sparkles,
+  Quote,
   TrendingUp,
   Users,
   Waves,
@@ -19,6 +21,7 @@ import {
 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
+const HERO_VIDEO = "/marketing/hero.mp4";
 const HERO_IMG =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663341564225/MxZkjsoQDmQNZpMP69zNB6/ekite-hero-kitesurf-action-ErExXvjZSGbeTnS33TTBLK.webp";
 const COMMUNITY_IMG =
@@ -33,28 +36,20 @@ export function EkiteHomePage() {
     <div className="pb-8">
       {/* Hero — sem nav duplicada (usa PublicSiteHeader) */}
       <section className="relative -mx-4 min-h-[min(88vh,820px)] overflow-hidden rounded-b-3xl md:-mx-6 md:mx-0 md:rounded-3xl lg:-mx-8 lg:mx-0">
-        <div className="absolute inset-0 opacity-40">
-          {/* eslint-disable-next-line @next/next/no-img-element -- URLs remotas; evitar remotePatterns em next.config */}
-          <img
-            src={HERO_IMG}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
-        </div>
+        <EkiteHomeHeroMedia posterSrc={HERO_IMG} videoSrc={HERO_VIDEO} />
 
         <div className="container relative z-10 px-4 pb-16 pt-28 md:px-6 md:pt-36 md:pb-32">
           <div className="max-w-2xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2">
-              <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="text-sm font-semibold text-secondary">Novo design</span>
+              <Wind className="h-4 w-4 text-secondary" />
+              <span className="text-sm font-semibold text-secondary">O Vento nos move</span>
             </div>
             <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-primary md:text-7xl">
               O futuro do kite é conectado
             </h1>
             <p className="mb-8 text-lg leading-relaxed text-muted-foreground md:text-xl">
-              Uma plataforma que coloca o rider no centro. Organize tudo à volta: escolas, aulas,
-              spots e conexões. Para quem está dentro do jogo.
+              Uma plataforma que coloca o kite no centro e organiza tudo à volta: escolas, aulas,
+              spots e conexões.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg hover:opacity-95">
@@ -320,6 +315,25 @@ export function EkiteHomePage() {
           </div>
         </section>
 
+        {/* Depoimentos */}
+        <section id="depoimentos" className="border-t bg-muted/20 py-20 md:py-32">
+          <h2 className="mb-10 text-center text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            Depoimentos
+          </h2>
+          <Card className="mx-auto max-w-3xl border bg-card shadow-md">
+            <CardContent className="pt-8 pb-8 md:px-10">
+              <Quote className="mb-4 h-10 w-10 text-primary/60" aria-hidden />
+              <blockquote className="text-lg leading-relaxed text-foreground md:text-xl">
+                &ldquo;Antes da eKite, eu organizava tudo no WhatsApp e em planilhas. Era confuso e
+                perdia tempo. Hoje a minha agenda está organizada, os alunos chegam pelos spots e
+                consigo focar no que importa: dar aula e viver o kite.&rdquo;
+              </blockquote>
+              <p className="mt-6 font-semibold text-foreground">Maicon Louva</p>
+              <p className="text-sm text-muted-foreground">Escola parceira</p>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* CTA */}
         <section className="relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary/80 py-20 text-primary-foreground md:py-32">
           <div className="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
@@ -358,7 +372,10 @@ export function EkiteHomePage() {
                   </div>
                   <span className="text-lg font-bold">eKite</span>
                 </div>
-                <p className="text-sm text-white/70">O futuro do kite é conectado.</p>
+                <p className="text-sm leading-relaxed text-white/70">
+                  Somos a infraestrutura digital do kitesurf — organizar a operação de quem ensina e
+                  elevar a experiência de quem pratica.
+                </p>
               </div>
               <div>
                 <h4 className="mb-4 font-semibold">Produto</h4>
