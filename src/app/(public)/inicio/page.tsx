@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "eKite — Menos barreiras. Mais kite.",
   description:
     "Plataforma para riders, escolas e spots: agenda, spots, centros e presença digital. O futuro do kite é conectado.",
+  alternates: {
+    canonical: "/home",
+  },
   openGraph: {
     title: "eKite — Menos barreiras. Mais kite.",
     description:
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MarketingHomePage() {
+export default function InicioMarketingPage() {
   return (
     <PublicJourneyShellWithAuth>
       <EkiteHomePage />

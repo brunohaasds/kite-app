@@ -13,9 +13,13 @@ export {
   Bell,
 
   // Domain-specific
+  Anchor,
   Calendar,
   Clock,
+  Compass,
   MapPin,
+  TrendingUp,
+  Waves,
   Wind,
   Star,
   Zap,

@@ -39,6 +39,7 @@
     "node_modules",
     "TEMPLATES",
     "BRAIN",
-    "prisma/seed.ts"
+    "prisma/seed.ts",
+    "ekite-landing-page"
   ]
 }
