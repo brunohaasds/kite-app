@@ -26,13 +26,14 @@ export function IconBox({
     lg: "h-10 w-10",
   };
 
+  /* Ícones sempre text-primary; fundos com tons primary (alinhado a ModernCard). */
   const bgVariants = {
     primary:
       "bg-gradient-to-br from-primary/20 to-primary/5 text-primary",
     secondary:
-      "bg-gradient-to-br from-secondary/20 to-secondary/5 text-secondary",
+      "bg-gradient-to-br from-primary/16 to-primary/4 text-primary",
     accent:
-      "bg-gradient-to-br from-accent/20 to-accent/5 text-accent",
+      "bg-gradient-to-br from-primary/12 to-primary/3 text-primary",
   };
 
   return (

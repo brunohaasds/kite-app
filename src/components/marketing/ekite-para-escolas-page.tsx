@@ -22,6 +22,11 @@ import {
   Wind,
   Zap,
 } from "@/lib/icons";
+import {
+  marketingSectionBleed,
+  marketingSectionInner,
+} from "@/components/marketing/marketing-section-classes";
+import { cn } from "@/lib/utils";
 
 const HERO_VIDEO = "/marketing/hero.mp4";
 const HERO_POSTER =
@@ -32,14 +37,14 @@ const GROWTH_IMG =
 export function EkiteParaEscolasPage() {
   return (
     <div className="pb-8">
-      <section className="relative -mx-4 min-h-[min(88vh,820px)] overflow-hidden rounded-b-3xl md:-mx-6 md:mx-0 md:rounded-3xl lg:-mx-8 lg:mx-0">
+      <section className="relative -mx-4 min-h-[min(88vh,820px)] overflow-hidden rounded-b-3xl bg-gradient-to-b from-primary/50 via-primary/35 to-primary/25 md:-mx-6 md:mx-0 md:rounded-3xl lg:-mx-8 lg:mx-0">
         <EkiteHomeHeroMedia posterSrc={HERO_POSTER} videoSrc={HERO_VIDEO} />
 
         <div className="container relative z-10 px-4 pb-16 pt-28 md:px-6 md:pb-32 md:pt-36">
           <div className="max-w-2xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2">
-              <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="text-sm font-semibold text-secondary">Para Escolas</span>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-primary/5 px-4 py-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Para Escolas</span>
             </div>
             <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-primary md:text-7xl">
               Somos a infraestrutura digital do kitesurf
@@ -62,8 +67,13 @@ export function EkiteParaEscolasPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-        <section className="bg-gradient-to-b from-white to-muted/30 py-16 md:py-24">
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-b from-white to-muted/30 py-16 md:py-24",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
               Crescer e escalar a operação
@@ -73,9 +83,11 @@ export function EkiteParaEscolasPage() {
               o kite.
             </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="features" className="py-20 md:py-32">
+      <section id="features" className="py-20 md:py-32">
+        <div className={marketingSectionInner}>
           <div className="mb-16">
             <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
               Tudo que precisas para gerir
@@ -156,9 +168,16 @@ export function EkiteParaEscolasPage() {
               variant="accent"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32">
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="mb-16">
             <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
               Crescimento e Escalabilidade
@@ -214,9 +233,11 @@ export function EkiteParaEscolasPage() {
               variant="primary"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="growth" className="py-20 md:py-32">
+      <section id="growth" className="py-20 md:py-32">
+        <div className={marketingSectionInner}>
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <h2 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
@@ -235,14 +256,14 @@ export function EkiteParaEscolasPage() {
                     <p className="text-sm text-muted-foreground">Tudo sincronizado e automatizado</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent p-5 transition-all hover:border-secondary/40 hover:shadow-md">
+                <div className="flex gap-4 rounded-xl border border-primary/15 bg-gradient-to-br from-primary/4 to-transparent p-5 transition-all hover:border-primary/35 hover:shadow-md">
                   <IconBox icon={<Layers className="h-full w-full" />} variant="secondary" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Escalabilidade</h4>
                     <p className="text-sm text-muted-foreground">Cresce com a tua escola</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-accent/20 bg-gradient-to-br from-accent/5 to-transparent p-5 transition-all hover:border-accent/40 hover:shadow-md">
+                <div className="flex gap-4 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/6 to-transparent p-5 transition-all hover:border-primary/45 hover:shadow-md">
                   <IconBox icon={<TrendingUp className="h-full w-full" />} variant="accent" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Crescimento Sustentável</h4>
@@ -261,9 +282,16 @@ export function EkiteParaEscolasPage() {
               <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/10 to-transparent" />
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32">
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="mb-16 text-center">
             <h2 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight text-foreground md:text-5xl">
               Benefícios para a tua escola
@@ -280,7 +308,7 @@ export function EkiteParaEscolasPage() {
                 Automatiza tarefas repetitivas e liberta tempo para o que realmente importa.
               </p>
             </div>
-            <div className="group rounded-2xl border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent p-8 transition-all hover:border-secondary/40 hover:shadow-lg">
+            <div className="group rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/4 to-transparent p-8 transition-all hover:border-primary/35 hover:shadow-lg">
               <div className="mb-4 flex items-start gap-4">
                 <IconBox icon={<TrendingUp className="h-full w-full" />} variant="secondary" size="md" />
                 <h3 className="text-xl font-bold tracking-tight text-foreground">Mais Receita</h3>
@@ -289,7 +317,7 @@ export function EkiteParaEscolasPage() {
                 Ferramentas para aumentar vendas, gerir pacotes e criar novas fontes de receita.
               </p>
             </div>
-            <div className="group rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/5 to-transparent p-8 transition-all hover:border-accent/40 hover:shadow-lg">
+            <div className="group rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/6 to-transparent p-8 transition-all hover:border-primary/45 hover:shadow-lg">
               <div className="mb-4 flex items-start gap-4">
                 <IconBox icon={<Users className="h-full w-full" />} variant="accent" size="md" />
                 <h3 className="text-xl font-bold tracking-tight text-foreground">Melhor Experiência</h3>
@@ -299,12 +327,18 @@ export function EkiteParaEscolasPage() {
               </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary/80 py-20 text-primary-foreground md:py-32">
-          <div className="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-96 w-96 translate-y-1/2 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
-          <div className="container relative z-10 mx-auto px-4 text-center">
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary/80 py-20 text-primary-foreground md:py-32",
+        )}
+      >
+        <div className="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 translate-y-1/2 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+        <div className="container relative z-10 mx-auto px-4 text-center">
             <h2 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl">Começa a crescer agora</h2>
             <p className="mx-auto mb-8 max-w-2xl text-lg text-white/90">
               A infraestrutura digital que a tua escola precisa para escalar. Sem complicações, sem
@@ -325,11 +359,11 @@ export function EkiteParaEscolasPage() {
                 <Link href="/centers">Agendar Demo</Link>
               </Button>
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <footer className="bg-foreground py-12 text-white">
-          <div className="mx-auto max-w-6xl px-4 md:px-6">
+      <footer className={cn(marketingSectionBleed, "bg-foreground py-12 text-white")}>
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
             <div className="mb-8 grid gap-8 md:grid-cols-4">
               <div>
                 <div className="mb-4 flex items-center gap-2">
@@ -395,8 +429,7 @@ export function EkiteParaEscolasPage() {
               <p>© {new Date().getFullYear()} eKite. Todos os direitos reservados.</p>
             </div>
           </div>
-        </footer>
-      </div>
+      </footer>
     </div>
   );
 }

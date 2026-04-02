@@ -20,31 +20,32 @@ export function ModernCard({
   className,
   style,
 }: ModernCardProps) {
+  /* secondary/accent no tema são superfícies claras — contornos e ícones alinhados à família primary. */
   const variantStyles = {
     primary:
       "bg-gradient-to-br from-primary/5 via-transparent to-transparent border-primary/20 hover:border-primary/40",
     secondary:
-      "bg-gradient-to-br from-secondary/5 via-transparent to-transparent border-secondary/20 hover:border-secondary/40",
+      "bg-gradient-to-br from-primary/4 via-transparent to-transparent border-primary/15 hover:border-primary/35",
     accent:
-      "bg-gradient-to-br from-accent/5 via-transparent to-transparent border-accent/20 hover:border-accent/40",
+      "bg-gradient-to-br from-primary/6 via-transparent to-transparent border-primary/25 hover:border-primary/45",
   };
 
   const iconBgVariants = {
     primary: "bg-gradient-to-br from-primary/15 to-primary/5",
-    secondary: "bg-gradient-to-br from-secondary/15 to-secondary/5",
-    accent: "bg-gradient-to-br from-accent/15 to-accent/5",
+    secondary: "bg-gradient-to-br from-primary/14 to-primary/5",
+    accent: "bg-gradient-to-br from-primary/13 to-primary/4",
   };
 
   const iconColorVariants = {
     primary: "text-primary",
-    secondary: "text-secondary",
-    accent: "text-accent",
+    secondary: "text-primary",
+    accent: "text-primary",
   };
 
   const bulletVariant = {
     primary: "bg-primary",
-    secondary: "bg-secondary",
-    accent: "bg-accent",
+    secondary: "bg-primary",
+    accent: "bg-primary",
   };
 
   return (

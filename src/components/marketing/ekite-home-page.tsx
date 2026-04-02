@@ -19,6 +19,10 @@ import {
   Wind,
   Zap,
 } from "@/lib/icons";
+import {
+  marketingSectionBleed,
+  marketingSectionInner,
+} from "@/components/marketing/marketing-section-classes";
 import { cn } from "@/lib/utils";
 
 const HERO_VIDEO = "/marketing/hero.mp4";
@@ -35,14 +39,14 @@ export function EkiteHomePage() {
   return (
     <div className="pb-8">
       {/* Hero — sem nav duplicada (usa PublicSiteHeader) */}
-      <section className="relative -mx-4 min-h-[min(88vh,820px)] overflow-hidden rounded-b-3xl md:-mx-6 md:mx-0 md:rounded-3xl lg:-mx-8 lg:mx-0">
+      <section className="relative -mx-4 min-h-[min(88vh,820px)] overflow-hidden rounded-b-3xl bg-gradient-to-b from-primary/50 via-primary/35 to-primary/25 md:-mx-6 md:mx-0 md:rounded-3xl lg:-mx-8 lg:mx-0">
         <EkiteHomeHeroMedia posterSrc={HERO_IMG} videoSrc={HERO_VIDEO} />
 
         <div className="container relative z-10 px-4 pb-16 pt-28 md:px-6 md:pt-36 md:pb-32">
           <div className="max-w-2xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2">
-              <Wind className="h-4 w-4 text-secondary" />
-              <span className="text-sm font-semibold text-secondary">O Vento nos move</span>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-primary/5 px-4 py-2">
+              <Wind className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">O Vento nos move</span>
             </div>
             <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-primary md:text-7xl">
               O futuro do kite é conectado
@@ -65,9 +69,14 @@ export function EkiteHomePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
-        {/* Tagline */}
-        <section className="bg-gradient-to-b from-white to-muted/30 py-16 md:py-24">
+      {/* Tagline */}
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-b from-white to-muted/30 py-16 md:py-24",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-primary/5 px-4 py-2">
               <Waves className="h-4 w-4 text-primary" />
@@ -83,10 +92,12 @@ export function EkiteHomePage() {
               escalar.
             </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Três pilares */}
-        <section id="features" className="py-20 md:py-32">
+      {/* Três pilares */}
+      <section id="features" className="py-20 md:py-32">
+        <div className={marketingSectionInner}>
           <div className="grid gap-8 md:grid-cols-3">
             <ModernCard
               icon={<Wind className="h-full w-full" />}
@@ -122,10 +133,17 @@ export function EkiteHomePage() {
               variant="accent"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Valor + imagem */}
-        <section className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32">
+      {/* Valor + imagem */}
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <h2 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
@@ -136,21 +154,21 @@ export function EkiteHomePage() {
                 organizados. Sua operação fluindo.
               </p>
               <div className="space-y-4">
-                <div className="flex gap-4 rounded-xl border border-primary/10 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-primary/30">
+                <div className="flex gap-4 rounded-xl border border-primary/15 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-primary/35">
                   <IconBox icon={<Compass className="h-full w-full" />} variant="primary" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Presença Digital</h4>
                     <p className="text-sm text-muted-foreground">Página por escola com contacto e agenda</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-secondary/10 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-secondary/30">
+                <div className="flex gap-4 rounded-xl border border-primary/15 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-primary/35">
                   <IconBox icon={<Anchor className="h-full w-full" />} variant="secondary" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Organização</h4>
                     <p className="text-sm text-muted-foreground">Gestão de aulas e alunos simplificada</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-accent/10 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-accent/30">
+                <div className="flex gap-4 rounded-xl border border-primary/15 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-primary/35">
                   <IconBox icon={<Zap className="h-full w-full" />} variant="accent" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Crescimento</h4>
@@ -169,10 +187,12 @@ export function EkiteHomePage() {
               <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tr from-primary/10 to-transparent" />
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Spots */}
-        <section id="for-riders" className="py-20 md:py-32">
+      {/* Spots */}
+      <section id="for-riders" className="py-20 md:py-32">
+        <div className={marketingSectionInner}>
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div className="relative order-2 md:order-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -199,14 +219,14 @@ export function EkiteHomePage() {
                     <p className="text-sm text-muted-foreground">Spots com escolas e contexto local integrados</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent p-5 transition-all hover:border-secondary/40 hover:shadow-md">
+                <div className="flex gap-4 rounded-xl border border-primary/15 bg-gradient-to-br from-primary/4 to-transparent p-5 transition-all hover:border-primary/35 hover:shadow-md">
                   <IconBox icon={<Calendar className="h-full w-full" />} variant="secondary" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Agendamento Fluido</h4>
                     <p className="text-sm text-muted-foreground">Marcar uma sessão sem pensar</p>
                   </div>
                 </div>
-                <div className="flex gap-4 rounded-xl border border-accent/20 bg-gradient-to-br from-accent/5 to-transparent p-5 transition-all hover:border-accent/40 hover:shadow-md">
+                <div className="flex gap-4 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/6 to-transparent p-5 transition-all hover:border-primary/45 hover:shadow-md">
                   <IconBox icon={<Users className="h-full w-full" />} variant="accent" size="md" />
                   <div>
                     <h4 className="mb-1 font-semibold text-foreground">Comunidade</h4>
@@ -216,10 +236,18 @@ export function EkiteHomePage() {
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Escolas */}
-        <section id="for-schools" className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32">
+      {/* Escolas */}
+      <section
+        id="for-schools"
+        className={cn(
+          marketingSectionBleed,
+          "bg-gradient-to-br from-primary/5 via-white to-secondary/5 py-20 md:py-32",
+        )}
+      >
+        <div className={marketingSectionInner}>
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <h2 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
@@ -240,16 +268,16 @@ export function EkiteHomePage() {
                   {
                     title: "Adoção Acessível",
                     body: "Sem barreiras de entrada elevada, escala com a comunidade",
-                    border: "border-secondary/20 hover:border-secondary/40",
-                    bg: "from-white to-secondary/5",
-                    icon: "text-secondary",
+                    border: "border-primary/15 hover:border-primary/35",
+                    bg: "from-white to-primary/4",
+                    icon: "text-primary",
                   },
                   {
                     title: "Distribuição Orgânica",
                     body: "Spots como pontos de descoberta natural",
-                    border: "border-accent/20 hover:border-accent/40",
-                    bg: "from-white to-accent/5",
-                    icon: "text-accent",
+                    border: "border-primary/25 hover:border-primary/45",
+                    bg: "from-white to-primary/6",
+                    icon: "text-primary",
                   },
                 ].map((row) => (
                   <div
@@ -279,10 +307,12 @@ export function EkiteHomePage() {
               <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tl from-accent/10 to-transparent" />
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Crenças */}
-        <section className="py-20 md:py-32">
+      {/* Crenças */}
+      <section className="py-20 md:py-32">
+        <div className={marketingSectionInner}>
           <div className="mx-auto mb-16 max-w-3xl text-center">
             <h2 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
               No que acreditamos
@@ -303,7 +333,7 @@ export function EkiteHomePage() {
                 importante quanto performance.
               </p>
             </div>
-            <div className="group rounded-2xl border border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent p-8 transition-all hover:border-secondary/40 hover:shadow-lg">
+            <div className="group rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/4 to-transparent p-8 transition-all hover:border-primary/35 hover:shadow-lg">
               <div className="mb-4 flex items-start gap-4">
                 <IconBox icon={<Compass className="h-full w-full" />} variant="secondary" size="md" />
                 <h3 className="text-xl font-bold tracking-tight text-foreground">Futuro Conectado</h3>
@@ -313,10 +343,15 @@ export function EkiteHomePage() {
               </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Depoimentos */}
-        <section id="depoimentos" className="border-t bg-muted/20 py-20 md:py-32">
+      {/* Depoimentos */}
+      <section
+        id="depoimentos"
+        className={cn(marketingSectionBleed, "border-t bg-muted/20 py-20 md:py-32")}
+      >
+        <div className={marketingSectionInner}>
           <h2 className="mb-10 text-center text-4xl font-bold tracking-tight text-foreground md:text-5xl">
             Depoimentos
           </h2>
@@ -332,13 +367,19 @@ export function EkiteHomePage() {
               <p className="text-sm text-muted-foreground">Escola parceira</p>
             </CardContent>
           </Card>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA */}
-        <section className="relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary/80 py-20 text-primary-foreground md:py-32">
-          <div className="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-96 w-96 translate-y-1/2 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
-          <div className="container relative z-10 mx-auto px-4 text-center">
+      {/* CTA */}
+      <section
+        className={cn(
+          marketingSectionBleed,
+          "relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary/80 py-20 text-primary-foreground md:py-32",
+        )}
+      >
+        <div className="absolute top-0 right-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 translate-y-1/2 -translate-x-1/2 rounded-full bg-white/5 blur-3xl" />
+        <div className="container relative z-10 mx-auto px-4 text-center">
             <h2 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl">Começa agora</h2>
             <p className="mx-auto mb-8 max-w-2xl text-lg text-white/90">
               Explora spots e centros, ou entra na tua conta. O futuro do kite é conectado.
@@ -358,12 +399,12 @@ export function EkiteHomePage() {
                 <Link href="/centers">Ver Centros</Link>
               </Button>
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Footer */}
-        <footer className="bg-foreground py-12 text-white">
-          <div className="mx-auto max-w-6xl px-4 md:px-6">
+      {/* Footer */}
+      <footer className={cn(marketingSectionBleed, "bg-foreground py-12 text-white")}>
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
             <div className="mb-8 grid gap-8 md:grid-cols-4">
               <div>
                 <div className="mb-4 flex items-center gap-2">
@@ -429,8 +470,7 @@ export function EkiteHomePage() {
               <p>© {new Date().getFullYear()} eKite. Todos os direitos reservados.</p>
             </div>
           </div>
-        </footer>
-      </div>
+      </footer>
     </div>
   );
 }
