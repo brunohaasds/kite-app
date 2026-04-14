@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/rbac/require-permission";
 import { prisma } from "@/lib/db";
+import { StudentRecoveryPanel } from "@/components/student/student-recovery-panel";
 import { ContaClient } from "./conta-client";
 
 export default async function StudentAccountPage() {
@@ -12,11 +13,7 @@ export default async function StudentAccountPage() {
   });
 
   if (!user) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Usuário não encontrado.
-      </div>
-    );
+    return <StudentRecoveryPanel variant="no_user" />;
   }
 
   const student = await prisma.students.findFirst({

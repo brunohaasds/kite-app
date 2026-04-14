@@ -35,6 +35,24 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
 export type RegisterStudentMinimalInput = z.infer<typeof registerStudentMinimalSchema>;
 
+/** Alteração de senha pelo próprio utilizador autenticado (Conta). */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Informe a senha atual"),
+    newPassword: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmNewPassword: z.string().min(1, "Confirme a nova senha"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "As senhas não coincidem",
+    path: ["confirmNewPassword"],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: "A nova senha deve ser diferente da atual",
+    path: ["newPassword"],
+  });
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
 const USER_ROLES = [
   "superadmin",
   "admin",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -70,11 +70,23 @@ interface BookingWizardProps {
   slot: SlotData;
   org: OrgData;
   packages: PackageData[];
+  /** Sessão já existente (servidor): saltar passo login/registo. */
+  initialAuthenticated?: boolean;
+  /** Agenda pública da escola — destino do Voltar quando o fluxo não passou pelo passo auth. */
+  agendaHref: string;
 }
 
-export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
+export function BookingWizard({
+  slot,
+  org,
+  packages,
+  initialAuthenticated = false,
+  agendaHref,
+}: BookingWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("auth");
+  const [step, setStep] = useState<Step>(() =>
+    initialAuthenticated ? "lesson-type" : "auth",
+  );
   const [loading, setLoading] = useState(false);
   const [lessonChoice, setLessonChoice] = useState<LessonChoice | null>(null);
   const [studentPackages, setStudentPackages] = useState<StudentPackage[]>([]);
@@ -95,6 +107,12 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
       // Student may not have packages yet
     }
   }
+
+  useEffect(() => {
+    if (initialAuthenticated) {
+      void fetchStudentPackages();
+    }
+  }, [initialAuthenticated]);
 
   async function handleLogin() {
     if (!email || !password) {
@@ -219,6 +237,12 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
         body: JSON.stringify(body),
       });
 
+      if (res.status === 401) {
+        toast.error("Sessão expirada. Faça login para continuar.");
+        setStep("auth");
+        return;
+      }
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Erro ao agendar");
@@ -235,7 +259,11 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
 
   function handleBack() {
     if (step === "lesson-type") {
-      setStep("auth");
+      if (initialAuthenticated) {
+        router.push(agendaHref);
+      } else {
+        setStep("auth");
+      }
     } else if (step === "confirmation") {
       setStep("lesson-type");
       setLessonChoice(null);
@@ -365,9 +393,11 @@ export function BookingWizard({ slot, org, packages }: BookingWizardProps) {
           {step === "lesson-type" && (
             <div className="space-y-6">
               <p className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
-                {authTab === "existing"
-                  ? "Bem-vindo de volta! Escolha como deseja agendar sua aula."
-                  : "Conta criada! Agora escolha como deseja agendar."}
+                {initialAuthenticated
+                  ? "Escolha como deseja agendar sua aula."
+                  : authTab === "existing"
+                    ? "Bem-vindo de volta! Escolha como deseja agendar sua aula."
+                    : "Conta criada! Agora escolha como deseja agendar."}
               </p>
 
               {/* Active package credits */}

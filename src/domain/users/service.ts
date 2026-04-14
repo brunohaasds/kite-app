@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import type { CreateUserInput } from "./schema";
 import type {
@@ -389,4 +389,33 @@ export async function updateUserBySuperAdmin(
       );
     });
   }
+}
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; code: "user_not_found" | "wrong_password" };
+
+/** Utilizador autenticado altera a própria senha (validar `currentPassword` antes de gravar). */
+export async function changePasswordForAuthenticatedUser(
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ChangePasswordResult> {
+  const user = await prisma.users.findFirst({
+    where: { id: userId, deleted_at: null },
+    select: { password: true },
+  });
+  if (!user) {
+    return { ok: false, code: "user_not_found" };
+  }
+  const match = await compare(currentPassword, user.password);
+  if (!match) {
+    return { ok: false, code: "wrong_password" };
+  }
+  const hashed = await hash(newPassword, 12);
+  await prisma.users.update({
+    where: { id: userId },
+    data: { password: hashed },
+  });
+  return { ok: true };
 }

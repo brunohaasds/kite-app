@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { listByOrg as listPackages } from "@/domain/packages/repo";
 import { getOrganizationFromEscolaParam } from "@/lib/resolve-org";
@@ -62,11 +63,16 @@ export default async function BookingPage({ params }: Props) {
     validityDays: p.validity_days,
   }));
 
+  const session = await auth();
+  const initialAuthenticated = !!session?.user;
+
   return (
     <BookingWizard
       slot={slotData}
       org={orgData}
       packages={packagesData}
+      initialAuthenticated={initialAuthenticated}
+      agendaHref={`/escola/${org.slug}/agenda`}
     />
   );
 }

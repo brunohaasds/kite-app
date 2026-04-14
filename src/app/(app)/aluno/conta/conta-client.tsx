@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Zap, Award, LogOut, Settings, Bell } from "@/lib/icons";
+import { Calendar, Zap, Award, LogOut, Settings, Bell, KeyRound } from "@/lib/icons";
 import { EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { ImageUpload } from "@/components/shared/image-upload";
@@ -26,9 +26,14 @@ interface Props {
 
 export function ContaClient({ user, level, totalSessions, activePackages }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone ?? "");
   const [saving, setSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   async function handleSave() {
     setSaving(true);
@@ -45,6 +50,39 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
       toast.error("Erro ao salvar.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function resetPasswordForm() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+  }
+
+  async function handleChangePassword() {
+    setPasswordSaving(true);
+    try {
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(typeof data.error === "string" ? data.error : "Não foi possível alterar a senha.");
+        return;
+      }
+      toast.success("Senha alterada com sucesso!");
+      resetPasswordForm();
+      setPasswordOpen(false);
+    } catch {
+      toast.error("Erro ao alterar a senha.");
+    } finally {
+      setPasswordSaving(false);
     }
   }
 
@@ -108,6 +146,18 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
         </button>
 
         <button
+          type="button"
+          onClick={() => {
+            resetPasswordForm();
+            setPasswordOpen(true);
+          }}
+          className="flex w-full items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent"
+        >
+          <KeyRound className="h-5 w-5 text-muted-foreground" />
+          <span className="flex-1 text-left font-medium">Alterar senha</span>
+        </button>
+
+        <button
           disabled
           className="flex w-full items-center gap-3 rounded-xl border bg-card p-4 shadow-sm opacity-50"
         >
@@ -146,6 +196,68 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
               </Button>
               <Button className="flex-1" disabled={saving} onClick={handleSave}>
                 {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={passwordOpen}
+        onOpenChange={(open) => {
+          setPasswordOpen(open);
+          if (!open) resetPasswordForm();
+        }}
+      >
+        <DialogContent className="max-w-[90%] rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Alterar senha</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="pwd-current">Senha atual</Label>
+              <Input
+                id="pwd-current"
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pwd-new">Nova senha</Label>
+              <Input
+                id="pwd-new"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pwd-confirm">Confirmar nova senha</Label>
+              <Input
+                id="pwd-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setPasswordOpen(false);
+                  resetPasswordForm();
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button className="flex-1" disabled={passwordSaving} onClick={handleChangePassword}>
+                {passwordSaving ? "Salvando..." : "Salvar senha"}
               </Button>
             </div>
           </div>

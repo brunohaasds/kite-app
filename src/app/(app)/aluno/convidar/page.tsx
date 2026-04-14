@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/rbac/require-permission";
 import { listByUser } from "@/domain/invites/repo";
 import { prisma } from "@/lib/db";
+import { StudentRecoveryPanel } from "@/components/student/student-recovery-panel";
 import { ConvidarClient } from "./convidar-client";
 
 export default async function ConvidarPage() {
@@ -13,11 +14,7 @@ export default async function ConvidarPage() {
   });
 
   if (!member) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Você não está vinculado a nenhuma escola.
-      </div>
-    );
+    return <StudentRecoveryPanel variant="no_member" />;
   }
 
   const invites = await listByUser(userId);

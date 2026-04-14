@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/rbac/require-permission";
 import { prisma } from "@/lib/db";
+import { StudentRecoveryPanel } from "@/components/student/student-recovery-panel";
 import { AulasClient } from "./aulas-client";
 
 export default async function StudentLessonsPage() {
@@ -11,11 +12,7 @@ export default async function StudentLessonsPage() {
   });
 
   if (!student) {
-    return (
-      <div className="py-12 text-center text-muted-foreground">
-        Perfil de aluno não encontrado.
-      </div>
-    );
+    return <StudentRecoveryPanel variant="no_student" />;
   }
 
   const sessions = await prisma.sessions.findMany({
