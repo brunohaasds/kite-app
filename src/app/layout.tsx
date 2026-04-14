@@ -1,14 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
-import { EKITE_LOGO_URL } from "@/lib/branding";
+import { PwaSerwistProvider } from "@/components/pwa/serwist-provider";
 import "./globals.css";
+
+const THEME_COLOR = "#0d9488";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
+  applicationName: "eKite",
   title: {
     default: "eKite — Gestão de escolas de kitesurf",
     template: "%s | eKite",
@@ -16,9 +19,24 @@ export const metadata: Metadata = {
   description:
     "Plataforma de gestão operacional para escolas de kitesurf. Agenda, alunos, pacotes e financeiro.",
   icons: {
-    icon: EKITE_LOGO_URL,
-    apple: EKITE_LOGO_URL,
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/icon-192.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "eKite",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: THEME_COLOR,
 };
 
 export default function RootLayout({
@@ -37,8 +55,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster richColors position="top-center" />
+          <PwaSerwistProvider>
+            {children}
+            <Toaster richColors position="top-center" />
+          </PwaSerwistProvider>
         </ThemeProvider>
       </body>
     </html>

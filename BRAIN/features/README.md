@@ -4,6 +4,7 @@ Documentação por funcionalidade, alinhada ao padrão do projeto (**INSTRUCTION
 
 | Documento | Resumo |
 |-----------|--------|
+| [PWA_INSTALACAO.md](./PWA_INSTALACAO.md) | Manifest, Serwist/Turbopack, `/offline`, QA instalação |
 | [ALUNO_ONBOARDING.md](./ALUNO_ONBOARDING.md) | Estados sem `students`/`members`/user: painel Sair + CTA `/centers` |
 | [AGENDAMENTO_PUBLICO_ESCOLA.md](./AGENDAMENTO_PUBLICO_ESCOLA.md) | Wizard `/escola/.../agendar/...`: sessão existente salta login; Voltar para agenda; 401 |
 | [ADMIN_AGENDA_E_SESSOES.md](./ADMIN_AGENDA_E_SESSOES.md) | Agenda admin: abas Pendentes/Finalizadas, fluxo do dia, agendamento pela escola |

@@ -30,6 +30,10 @@ export default auth((req) => {
     pathname.startsWith("/api/service-bookings") ||
     pathname.startsWith("/api/invites") ||
     pathname.startsWith("/api/upload") ||
+    pathname.startsWith("/serwist") ||
+    pathname.startsWith("/offline") ||
+    pathname.startsWith("/icons") ||
+    pathname.startsWith("/manifest.webmanifest") ||
     pathname === "/";
 
   if (isPublicRoute) {

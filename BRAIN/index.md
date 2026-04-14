@@ -15,6 +15,7 @@ Conforme [INSTRUCTIONS.md](../INSTRUCTIONS.md) — **Padrões de Documentação*
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [PWA_INSTALACAO.md](features/PWA_INSTALACAO.md) | Manifest, Serwist, offline, critérios instalação |
 | [ALUNO_ONBOARDING.md](features/ALUNO_ONBOARDING.md) | Painel recuperação aluno sem perfil/member/user |
 | [AGENDAMENTO_PUBLICO_ESCOLA.md](features/AGENDAMENTO_PUBLICO_ESCOLA.md) | Wizard agendar horário público, skip login com sessão |
 | [ADMIN_AGENDA_E_SESSOES.md](features/ADMIN_AGENDA_E_SESSOES.md) | Agenda admin: abas, agendamento escola, APIs |

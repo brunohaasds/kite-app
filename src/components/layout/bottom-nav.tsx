@@ -32,7 +32,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
-      <div className="mx-auto flex max-w-[480px] items-center justify-around">
+      <div className="mx-auto flex w-full max-w-[480px] items-center justify-around md:max-w-7xl md:px-6 lg:px-8">
         {navItems.map((item) => {
           const Icon = iconMap[item.icon];
           const isActive =
