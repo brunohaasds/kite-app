@@ -1,6 +1,8 @@
 # Padrão RBAC — Controle de Acesso
 
-**Last Updated:** [DATA]
+**Last Updated:** 2026-04-14
+
+> **eKite — fonte de verdade:** o projeto usa `ROLE_RULES` em `src/lib/rbac/permission-rules.ts` (recurso → ações por role: `superadmin`, `admin`, `instructor`, `student`). Os exemplos abaixo são **ilustrativos** de um estilo alternativo (strings `resource:action`); não copie literalmente — alinhe ao ficheiro real e a `resources.ts`.
 
 ---
 

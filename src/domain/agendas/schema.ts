@@ -15,3 +15,14 @@ export const addSlotSchema = z.object({
 
 export type CreateAgendaInput = z.infer<typeof createAgendaSchema>;
 export type AddSlotInput = z.infer<typeof addSlotSchema>;
+
+/** Corpo POST `/api/booking` (aluno autenticado). */
+export const publicBookingBodySchema = z.object({
+  slotId: z.number().int().positive(),
+  orgId: z.number().int().positive(),
+  lessonType: z.enum(["avulsa", "pacote_credito", "pacote_novo"]),
+  studentPackageId: z.number().int().positive().optional(),
+  packageId: z.number().int().positive().optional(),
+});
+
+export type PublicBookingBodyInput = z.infer<typeof publicBookingBodySchema>;

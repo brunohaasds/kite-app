@@ -5,6 +5,7 @@ Plataforma de gestão operacional para escolas de kitesurf. Migração do MVP mo
 ## Stack
 
 - **Next.js 16** (App Router, Server Components, Turbopack)
+- **React 19**
 - **TypeScript 6** (strict mode)
 - **Prisma 7** (PostgreSQL, driver adapters)
 - **NextAuth v5** (Auth.js, JWT + CredentialsProvider)
@@ -12,6 +13,9 @@ Plataforma de gestão operacional para escolas de kitesurf. Migração do MVP mo
 - **Tailwind CSS v4** (mobile-first)
 - **Sonner** (toast notifications)
 - **Zod** (schema validation)
+- **Serwist** (PWA / service worker — ver `BRAIN/features/PWA_INSTALACAO.md`)
+- **Vitest** (testes de domínio e utilitários — `npm run test`)
+- **Playwright** (smoke E2E — `npm run test:e2e`)
 - **lucide-react** (icons)
 
 ## Quick Setup
@@ -19,6 +23,9 @@ Plataforma de gestão operacional para escolas de kitesurf. Migração do MVP mo
 ```bash
 # Install dependencies
 npm install
+
+# Browsers Playwright (primeira vez, ou após upgrade do @playwright/test)
+npx playwright install chromium
 
 # Configure database
 cp .env.example .env.local
@@ -57,14 +64,19 @@ src/
 ├── components/
 │   ├── ui/                 # shadcn/ui components
 │   └── layout/             # Layout components (sidebar, bottom-nav, etc.)
-├── domain/                 # Domain layer (7 modules)
-│   ├── organizations/      # repo, types, schema
-│   ├── spots/
-│   ├── users/              # repo, types, schema, service
-│   ├── packages/
-│   ├── sessions/
+├── domain/                 # Domain layer (exemplos)
+│   ├── organizations/
 │   ├── agendas/
-│   └── payments/
+│   ├── global-spots/
+│   ├── invites/
+│   ├── instructors/
+│   ├── packages/
+│   ├── payments/
+│   ├── sessions/
+│   ├── spots/
+│   ├── students/
+│   ├── services/
+│   └── users/              # repo, types, schema, service
 ├── lib/
 │   ├── auth.ts             # NextAuth configuration
 │   ├── db.ts               # Prisma singleton
@@ -85,25 +97,28 @@ src/
 ## Route Structure
 
 ### Public (no auth)
-- `/escola/[id]` — School landing page
-- `/escola/[id]/agenda` — Public agenda
-- `/escola/[id]/agendar/[slotId]` — Booking form
-- `/agendamento/confirmado` — Booking confirmation
-- `/login` — Login page
+- `/spot/[slug]`, `/spots`, `/mapa`, `/centers` — Exploração de spots
+- `/escola/[orgSlug]` — Landing da escola (slug)
+- `/escola/[orgSlug]/agenda` — Agenda pública
+- `/escola/[orgSlug]/agendar/[slotId]` — Wizard de agendamento
+- `/login`, `/cadastro` — Auth
+- `/agendamento/confirmado` — Confirmação de agendamento
 
 ### Student (auth required)
-- `/aluno/aulas` — My lessons
-- `/aluno/pacotes` — My packages
-- `/aluno/conta` — Account settings
-- `/agenda/[agendaId]` — Shared agenda
+- `/aluno/aulas`, `/aluno/pacotes`, `/aluno/conta`, `/aluno/mapa`, spots…
 
-### Admin (admin role required)
-- `/admin/agenda` — Today's schedule
-- `/admin/agenda/nova` — Create/publish agenda
-- `/admin/alunos` — Student list
-- `/admin/aluno/[id]` — Student detail
-- `/admin/pacotes` — Package management
-- `/admin/financeiro` — Financial overview
+### Instructor / provider
+- `/instrutor/agenda`, `/instrutor/conta`
+- `/prestador` — Prestador de serviços
+
+### Admin (school)
+- `/admin`, `/admin/agenda`, `/admin/alunos`, `/admin/pacotes`, `/admin/financeiro`, …
+
+### Super-admin
+- `/super-admin`, `/super-admin/escolas`, `/super-admin/usuarios`, …
+
+### Shared
+- `/agenda/[agendaId]` — Agenda partilhada (contexto da escola)
 
 ## Scripts
 
@@ -112,6 +127,10 @@ npm run dev          # Start dev server (Turbopack)
 npm run build        # Production build
 npm run start        # Start production server
 npm run lint         # ESLint
+npm run test         # Vitest (schemas / utilitários críticos)
+npm run test:watch   # Vitest em modo watch
+npm run test:e2e     # Playwright (smoke em e2e/ — sobe dev se necessário)
+npm run test:e2e:ui  # Playwright UI mode
 npm run db:migrate   # Prisma migrate dev
 npm run db:generate  # Prisma generate
 npm run db:seed      # Seed database

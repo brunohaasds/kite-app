@@ -3,7 +3,7 @@
 ## Objetivo
 
 1. **`/spot/[slug]`** (ex.: Jericoacoara): página pública do **global spot**, com experiência visual alinhada à landing da escola e suporte a **imagem de hero** opcional.
-2. **`/escola/[id]`:** landing da escola mantida como referência de layout (hero, cards, instrutores, horários).
+2. **`/escola/[orgSlug]`:** landing da escola mantida como referência de layout (hero, cards, instrutores, horários).
 3. **Parceiros (prestadores):** listagem ao **final** da página em ambos os contextos; textos explicativos longos removidos para UI mais limpa.
 
 ---
@@ -17,7 +17,7 @@
 
 ### Hero (alinhado à escola)
 
-- Container: **`MobileContainer`** (`max-w-[480px]`), como `/escola/[id]`.
+- Container: **`MobileContainer`** (`max-w-[480px]`), como `/escola/[orgSlug]`.
 - Dimensões: `h-[35vh] min-h-[280px] overflow-hidden`.
 - Fundo base: `bg-gradient-to-br from-primary/30 to-primary/10`.
 - **Imagem opcional:** se `global_spots.image` (URL) existir, renderizar como camada absoluta `object-cover` atrás do gradiente.
@@ -32,11 +32,11 @@
 
 ---
 
-## Escola — `/escola/[id]`
+## Escola — `/escola/[orgSlug]`
 
 ### Arquivos
 
-- `src/app/(public)/escola/[id]/page.tsx`
+- `src/app/(public)/(public-schools)/escola/[orgSlug]/page.tsx`
 
 ### Parceiros
 

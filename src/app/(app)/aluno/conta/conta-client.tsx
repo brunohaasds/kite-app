@@ -130,8 +130,9 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
         </div>
         <div className="rounded-xl border bg-card p-4 text-center shadow-sm">
           <Award className="mx-auto mb-1 h-5 w-5 text-primary" />
-          <p className="text-lg font-bold">4.9</p>
+          <p className="text-lg font-bold">—</p>
           <p className="text-xs text-muted-foreground">Avaliação</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground/80">Sem dados ainda</p>
         </div>
       </div>
 
@@ -158,12 +159,14 @@ export function ContaClient({ user, level, totalSessions, activePackages }: Prop
         </button>
 
         <button
+          type="button"
           disabled
-          className="flex w-full items-center gap-3 rounded-xl border bg-card p-4 shadow-sm opacity-50"
+          className="flex w-full items-center gap-3 rounded-xl border bg-card p-4 shadow-sm opacity-60"
+          title="Funcionalidade não disponível nesta versão"
         >
           <Bell className="h-5 w-5 text-muted-foreground" />
           <span className="flex-1 text-left font-medium">Notificações</span>
-          <span className="text-xs text-muted-foreground">Em breve</span>
+          <span className="text-xs text-muted-foreground">Indisponível</span>
         </button>
 
         <button

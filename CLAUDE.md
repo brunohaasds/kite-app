@@ -8,14 +8,17 @@
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Framework | Next.js 15 (App Router, Turbopack) |
-| Linguagem | TypeScript (strict) |
-| ORM | Prisma + PostgreSQL |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19 |
+| Linguagem | TypeScript 6 (strict) |
+| ORM | Prisma 7 + PostgreSQL (`@prisma/adapter-pg`) |
 | Auth | NextAuth v5 (Auth.js) |
-| UI | shadcn/ui + Tailwind CSS v4 |
+| UI kit | shadcn/ui + Tailwind CSS v4 |
 | Forms | React Hook Form + Zod |
 | Tabelas | TanStack Table v8 |
 | Notificações | Sonner |
+| PWA | Serwist (service worker; ver `BRAIN/features/PWA_INSTALACAO.md`) |
+| Testes | Vitest (`npm run test`) |
 | Estado | React useState/useEffect (sem Redux) |
 | Deploy | Vercel + Supabase / Neon PostgreSQL |
 
@@ -28,14 +31,16 @@
 ```
 src/
 ├── app/
-│   ├── (public)/          # Rotas públicas (login, landing)
-│   ├── (app)/             # Rotas autenticadas
+│   ├── (public)/          # Marketing, spots, escolas, auth (/login, /cadastro)
+│   ├── (app)/             # Aluno, instrutor (shell mobile + bottom nav)
 │   │   └── <modulo>/
 │   │       ├── page.tsx          # Server component — só fetch + render
 │   │       ├── actions.ts        # Server actions — auth + validate + domain
 │   │       ├── columns.tsx       # Definição de colunas DataTable
 │   │       └── <feature>-client.tsx  # Client component
-│   └── api/
+│   ├── (admin)/admin/     # Consola da escola
+│   ├── (super-admin)/     # Operações globais
+│   └── api/                 # Route handlers (booking, upload, admin, …)
 ├── domain/
 │   └── <modulo>/
 │       └── <feature>/
@@ -81,19 +86,9 @@ UI (Client) → Server Action (actions.ts) → Domain (repo/service) → Prisma 
 
 ## RBAC — Permissões
 
-### Two-layer model
+### Modelo de regras
 
-```typescript
-// Layer 1: Regras fixas por role (nunca mudam)
-const ROLE_RULES = {
-  super_admin: { always: ["*"], never: [] },
-  admin: { always: ["users:view", "units:view"], never: ["super_admin:edit"] },
-  user: { always: [], never: ["admin:*"] },
-};
-
-// Layer 2: profile_permissions (configurável por admin, só para users)
-// → Cada user tem um profile com permissões granulares
-```
+Regras por role e recurso estão em **`src/lib/rbac/permission-rules.ts`** (`ROLE_RULES`: `superadmin`, `admin`, `instructor`, `student`, …). Os valores de `user.role` na sessão usam esses identificadores (ex.: `superadmin`, não `super_admin`).
 
 ### Uso em pages e actions
 
@@ -109,19 +104,19 @@ const session = await requireActionPermission("resource", "edit");
 
 ---
 
-## Multi-tenancy
+## Multi-tenancy (escopo por escola)
 
 ```typescript
-// Isolamento por client_id em todas as queries
-// super_admin: acesso global (sem filtro de client)
-// admin/user: sempre filtrar por client_id
+// Isolamento por organization_id nas queries da escola
+// superadmin: operações globais sem filtro de organização onde aplicável
+// admin / instructor / student: filtrar por organization_id da sessão
 
 function scopeWhere(sessionUser: SessionUser) {
-  if (sessionUser.role === "super_admin") return {};
-  return { client_id: sessionUser.clientId };
+  if (sessionUser.role === "superadmin") return {};
+  return { organization_id: sessionUser.organizationId };
 }
 
-// Usar em todas as queries do repo.ts
+// Usar em queries do repo quando o domínio for multi-escola
 const where = {
   ...scopeWhere(sessionUser),
   deleted_at: null,
@@ -197,6 +192,8 @@ const value = (row as { field?: string | null } | null)?.field ?? null
 3. Classificar por padrão (missing type, wrong import, etc.)
 4. Corrigir em lote por padrão
 5. `npm run build` para validar
+
+Após alterações em schemas Zod ou utilitários críticos, correr também **`npm run test`** (Vitest).
 
 ---
 

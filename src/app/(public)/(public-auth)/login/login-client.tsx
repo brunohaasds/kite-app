@@ -80,15 +80,13 @@ export default function LoginClient() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <div className="flex justify-end pt-1">
-            <span
-              className="text-xs text-muted-foreground"
-              aria-disabled
-              title="Em breve"
-            >
-              Esqueceu a senha?{" "}
-              <span className="text-primary/60">Em breve</span>
-            </span>
+          <div className="pt-1 text-right">
+            <p className="text-xs text-muted-foreground leading-snug">
+              Recuperação por email ainda não está disponível. Se já estiver
+              autenticado, use{" "}
+              <span className="font-medium text-foreground">Conta → Alterar senha</span>
+              .
+            </p>
           </div>
         </div>
 

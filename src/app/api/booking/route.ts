@@ -1,22 +1,14 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { publicBookingBodySchema } from "@/domain/agendas/schema";
 import { bookSlotInTransaction } from "@/domain/agendas/repo";
 import { purchaseInTransaction, useCreditInTransaction } from "@/domain/packages/repo";
 import {
   ensureStudentForOrganization,
   StudentOrgConflictError,
 } from "@/domain/students/ensure";
-
-const bookingSchema = z.object({
-  slotId: z.number().int().positive(),
-  orgId: z.number().int().positive(),
-  lessonType: z.enum(["avulsa", "pacote_credito", "pacote_novo"]),
-  studentPackageId: z.number().int().positive().optional(),
-  packageId: z.number().int().positive().optional(),
-});
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const parsed = bookingSchema.safeParse(body);
+    const parsed = publicBookingBodySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }

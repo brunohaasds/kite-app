@@ -21,7 +21,7 @@ Conforme [INSTRUCTIONS.md](../INSTRUCTIONS.md) — **Padrões de Documentação*
 | [ADMIN_AGENDA_E_SESSOES.md](features/ADMIN_AGENDA_E_SESSOES.md) | Agenda admin: abas, agendamento escola, APIs |
 | [SESSOES_BOOKING_SOURCE.md](features/SESSOES_BOOKING_SOURCE.md) | Campo `booking_source`, migration, regras |
 | [SUPER_ADMIN_USUARIOS.md](features/SUPER_ADMIN_USUARIOS.md) | Super Admin: usuários, API, dashboard, sidebar |
-| [LANDING_PUBLICA_SPOT_ESCOLA.md](features/LANDING_PUBLICA_SPOT_ESCOLA.md) | `/spot/[slug]`, `/escola/[id]`, parceiros |
+| [LANDING_PUBLICA_SPOT_ESCOLA.md](features/LANDING_PUBLICA_SPOT_ESCOLA.md) | `/spot/[slug]`, `/escola/[orgSlug]`, parceiros |
 | [BUILD_DEPLOY_VERCEL.md](features/BUILD_DEPLOY_VERCEL.md) | Prisma `postinstall`, build Vercel, env |
 
 Antes de implementar uma feature **nova** e complexa, pode-se criar `BRAIN/features/PLANNING_<NOME>.md` (opcional).

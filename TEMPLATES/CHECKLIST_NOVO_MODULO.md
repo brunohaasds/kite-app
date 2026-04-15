@@ -11,7 +11,7 @@ Use este checklist sempre que adicionar um novo recurso ao projeto.
 ## 1. Banco de Dados
 
 - [ ] Criar migration: `npx prisma migrate dev --name add_<tabela>`
-- [ ] Confirmar campos: `id`, `uuid`, `client_id`, `created_at`, `updated_at`, `deleted_at`
+- [ ] Confirmar campos: `id`, `uuid` (se necessário), FKs de domínio (ex.: `organization_id` quando for dado da escola), `created_at`, `updated_at`, `deleted_at`
 - [ ] Confirmar soft delete (`deleted_at`)
 - [ ] `npx prisma generate` após a migration
 

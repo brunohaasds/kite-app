@@ -1,318 +1,174 @@
-# Arquitetura — [Nome do Projeto]
+# Arquitetura — eKite (kite-app)
 
 > Documento vivo. Atualizar sempre que adicionar módulo, feature ou mudar decisão arquitetural.
 
-**Versão:** 1.0
-**Última Atualização:** [DATA]
-**Status:** Inicial
+**Versão:** 1.1  
+**Última atualização:** 2026-04-14  
+**Status:** Em produção / evolução contínua
 
 ---
 
-## Stack Tecnológica
+## Stack tecnológica
 
 | Camada | Tecnologia | Versão | Observação |
-|--------|-----------|--------|-----------|
-| Framework | Next.js | 15.x | App Router + Turbopack |
+|--------|------------|--------|------------|
+| Framework | Next.js | 16.x | App Router + Turbopack (`next dev --turbopack`) |
 | Runtime | Node.js | 20+ | |
-| Linguagem | TypeScript | 5.x | strict mode |
-| ORM | Prisma | 6.x | PostgreSQL |
-| Auth | NextAuth (Auth.js) | 5.x | JWT + Sessions |
-| UI Components | shadcn/ui | latest | Radix UI primitives |
+| Linguagem | TypeScript | 6.x | strict mode |
+| ORM | Prisma | 7.x | PostgreSQL (`@prisma/adapter-pg`) |
+| Auth | NextAuth (Auth.js) | 5.x beta | Credentials + JWT/session |
+| UI | shadcn/ui + Radix | latest | |
 | CSS | Tailwind CSS | 4.x | Mobile-first |
-| Forms | React Hook Form + Zod | latest | |
+| Forms | React Hook Form + Zod | latest | Schemas em `domain/**/schema.ts` |
 | Tabelas | TanStack Table | 8.x | |
 | Notificações | Sonner | latest | Toast |
-| Deploy | Vercel | — | Edge runtime |
+| PWA | Serwist | 9.x | Service worker + precache (ver `BRAIN/features/PWA_INSTALACAO.md`) |
+| Testes | Vitest | 4.x | `npm run test` — schemas e utilitários críticos |
+| Deploy | Vercel | — | |
 | Database | PostgreSQL | 16+ | Supabase / Neon |
 
 ---
 
-## Princípios Arquiteturais
+## Princípios arquiteturais
 
-1. **Mobile-First:** Toda UI pensada primeiro para telas pequenas
-2. **Server-First:** Máximo de lógica no servidor (Server Components, Server Actions)
-3. **Domain Layer:** Separação clara entre UI, orquestração e dados
-4. **Type-Safe:** TypeScript estrito em todo o stack
-5. **Multi-tenant ready:** Isolamento por `client_id` desde o início (se aplicável)
-
----
-
-## Arquitetura de Camadas
-
-```
-┌─────────────────────────────────────────────┐
-│  UI Layer (React Server + Client Components) │
-│  app/(app)/<modulo>/page.tsx                 │
-│  app/(app)/<modulo>/<feature>-client.tsx     │
-├─────────────────────────────────────────────┤
-│  Orchestration Layer (Server Actions)        │
-│  app/(app)/<modulo>/actions.ts              │
-│  → auth → validate → domain → revalidate    │
-├─────────────────────────────────────────────┤
-│  Domain Layer (Business Logic)              │
-│  domain/<modulo>/<feature>/                 │
-│  ├── repo.ts    (Prisma queries)            │
-│  ├── service.ts (business logic, optional)  │
-│  ├── schema.ts  (Zod validators)           │
-│  └── types.ts   (TypeScript interfaces)    │
-├─────────────────────────────────────────────┤
-│  Data Layer                                 │
-│  PostgreSQL + Prisma ORM                    │
-└─────────────────────────────────────────────┘
-```
+1. **Mobile-first:** UI pensada primeiro para telemóvel; listagens com alternativa em cards quando aplicável.
+2. **Server-first:** Server Components e Server Actions onde faz sentido; validação Zod no servidor.
+3. **Domain layer:** UI → actions/API → `domain` (repo / schema / service opcional) → Prisma → DB.
+4. **Type-safe:** TypeScript estrito em todo o stack.
+5. **Multi-tenant / escopo:** Dados de escola e utilizadores escopados por organização (`organization_id` / contexto de sessão); super-admin com visão global conforme regras em `lib/rbac`.
 
 ---
 
-## Estrutura de Pastas
+## Fluxo de dados (obrigatório)
+
+```
+UI (Client) → Server Action ou Route Handler → domain (repo/service) → Prisma → DB
+```
+
+Em Server Actions: `requireActionPermission` → Zod → repo → `revalidatePath` → resposta.
+
+---
+
+## Estrutura de pastas (resumo)
 
 ```
 src/
 ├── app/
-│   ├── (public)/              # Rotas públicas
-│   │   ├── login/
-│   │   ├── register/
-│   │   └── layout.tsx
-│   ├── (app)/                 # Rotas autenticadas (mobile-first layout)
-│   │   ├── layout.tsx         # Shell com bottom nav (mobile) / sidebar (desktop)
-│   │   ├── dashboard/
-│   │   └── <modulo>/
-│   │       ├── page.tsx
-│   │       ├── actions.ts
-│   │       ├── columns.tsx
-│   │       └── <feature>-client.tsx
-│   ├── api/
-│   │   └── auth/              # NextAuth route handler
-│   └── layout.tsx             # Root layout (providers)
-│
-├── domain/
-│   └── <modulo>/
-│       └── <feature>/
-│           ├── repo.ts
-│           ├── schema.ts
-│           ├── types.ts
-│           └── service.ts     # Opcional — só se lógica complexa
-│
-├── components/
-│   ├── ui/                    # shadcn/ui (não editar diretamente)
-│   ├── layout/
-│   │   ├── app-shell.tsx      # Layout principal app
-│   │   ├── bottom-nav.tsx     # Navegação mobile
-│   │   ├── sidebar.tsx        # Sidebar desktop
-│   │   └── top-bar.tsx        # Header mobile
-│   ├── data-table/            # DataTable reutilizável
-│   │   ├── data-table.tsx
-│   │   └── sortable-header.tsx
-│   └── <modulo>/              # Componentes específicos
-│
-├── lib/
-│   ├── auth.ts                # NextAuth config
-│   ├── db.ts                  # Prisma singleton
-│   ├── rbac/
-│   │   ├── permission-rules.ts
-│   │   ├── load-permissions.ts
-│   │   └── require-permission.ts
-│   ├── styles/
-│   │   └── status-colors.ts   # STATUS_COLORS centralizado
-│   └── utils.ts               # cn(), formatters
-│
-└── types/
-    └── index.ts               # NextAuth type augmentation
+│   ├── (public)/           # Marketing, spots, escolas públicas, auth (/login, /cadastro)
+│   ├── (app)/              # Área autenticada — aluno, instrutor (mobile shell + bottom nav)
+│   ├── (admin)/admin/      # Consola da escola (admin)
+│   ├── (super-admin)/      # Operações globais
+│   ├── api/                # REST: booking, upload, admin, super-admin, auth, …
+│   ├── offline/            # Página offline (PWA)
+│   └── serwist/            # Bundle do service worker (Serwist)
+├── domain/<modulo>/        # repo.ts, schema.ts, types.ts, service.ts (opcional)
+├── components/             # ui/, layout/, marketing/, módulos
+├── lib/                    # auth, db, rbac, auth-routes, constantes
+└── types/                  # Augmentação NextAuth
 ```
+
+Detalhe de convenções: ver [CLAUDE.md](./CLAUDE.md).
 
 ---
 
-## Autenticação (NextAuth v5)
+## Autenticação e rotas
 
-### Configuração básica
-
-```typescript
-// src/lib/auth.ts
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [CredentialsProvider({ ... })],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.clientId = user.clientId;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as string;
-      return session;
-    },
-  },
-});
-```
-
-### Type augmentation obrigatório
-
-```typescript
-// src/types/index.ts
-declare module "next-auth" {
-  interface User {
-    id: string;
-    role: string;
-    clientId?: number | null;
-  }
-  interface Session {
-    user: User & { id: string; role: string; clientId?: number | null };
-  }
-}
-```
+- **NextAuth v5** em `src/lib/auth.ts`; handler em `src/app/api/auth/[...nextauth]/route.ts`.
+- **Middleware** (`src/middleware.ts`): rotas públicas vs. áreas por role (`/admin`, `/aluno`, `/super-admin`, `/instrutor`, `/prestador`).
+- **Pós-login / callbacks:** `src/lib/auth-routes.ts` — `isSafeInternalPath`, `resolvePostLoginRedirect`, `getAppHomePath` (evitar open redirect).
 
 ---
 
-## RBAC — Controle de Acesso
+## RBAC — papéis no código
 
-### Roles disponíveis
+Os valores de `user.role` usados na aplicação incluem:
 
-| Role | Descrição | Acesso |
-|------|-----------|--------|
-| `super_admin` | Admin global do sistema | Tudo, sem restrição de cliente |
-| `admin` | Admin do cliente | Gerencia usuários e configs do cliente |
-| `user` | Usuário regular | Permissões configuráveis via profile |
+| Role | Área típica |
+|------|----------------|
+| `superadmin` | `/super-admin/*` |
+| `admin` | `/admin/*` (escola) |
+| `student` | `/aluno/*` |
+| `instructor` | `/instrutor/*` |
+| `service_provider` | `/prestador` |
 
-### Implementação
-
-Ver [BRAIN/references/RBAC_PATTERN.md](./BRAIN/references/RBAC_PATTERN.md) para detalhes completos.
-
----
-
-## Modelo de Dados — Tabelas Base
-
-```prisma
-// Tabelas presentes em todos os projetos com este template
-
-model clients {
-  id         Int       @id @default(autoincrement())
-  uuid       String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
-  name       String    @db.VarChar(255)
-  settings   Json?     // JSONB — configurações flexíveis
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  deleted_at DateTime? @db.Timestamp(0)
-}
-
-model users {
-  id         Int       @id @default(autoincrement())
-  uuid       String    @unique @db.Uuid @default(dbgenerated("gen_random_uuid()"))
-  client_id  Int?
-  name       String    @db.VarChar(255)
-  email      String    @unique @db.VarChar(255)
-  password   String    @db.VarChar(255)
-  role       String    @db.VarChar(50)  // super_admin | admin | user
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  deleted_at DateTime? @db.Timestamp(0)
-
-  client  clients?  @relation(fields: [client_id], references: [id])
-}
-
-// Sem profiles — permissões definidas por role no código (ROLE_RULES)
-```
+Permissões granulares e padrões: [BRAIN/references/RBAC_PATTERN.md](./BRAIN/references/RBAC_PATTERN.md) e `lib/rbac/`.
 
 ---
 
-## Padrões de JSONB
+## Modelo de dados
 
-Usado para configurações flexíveis sem migrações:
-
-```typescript
-// Sempre validar com Zod ao ler
-import { z } from "zod";
-
-const settingsSchema = z.object({
-  theme: z.enum(["light", "dark"]).default("light"),
-  notifications: z.boolean().default(true),
-}).catch({ theme: "light", notifications: true });
-
-// Leitura segura
-const settings = settingsSchema.parse(client.settings ?? {});
-```
+A fonte de verdade é `prisma/schema.prisma` (organizações, utilizadores, alunos, agendas, sessões, pacotes, spots globais, etc.). IDs numéricos (`Int`) como PK; soft delete com `deleted_at` onde aplicável.
 
 ---
 
-## Sistema de Cores de Status
+## UI e layout
 
-Centralizado em `src/lib/styles/status-colors.ts`. **Nunca usar cores hardcoded** — sempre referenciar `STATUS_COLORS`.
-
-```typescript
-export const STATUS_COLORS = {
-  // Adaptar para os status do domínio do projeto
-  active:   { hex: "#22c55e", label: "Ativo",   bgClass: "bg-green-500 text-white" },
-  inactive: { hex: "#94a3b8", label: "Inativo",  bgClass: "bg-slate-200 text-slate-700" },
-  pending:  { hex: "#f59e0b", label: "Pendente", bgClass: "bg-amber-100 text-amber-800" },
-} as const;
-```
+- **Shell autenticado:** `MobileContainer` + `BottomNav`; em desktop, largura máxima alinhada ao site público (`md:max-w-7xl`) para consistência visual.
+- **Cores de estado:** `src/lib/styles/status-colors.ts` — preferir `STATUS_COLORS` a cores soltas.
 
 ---
 
-## Navegação Mobile-First
+## APIs públicas e segurança
 
-### Layout shell
-
-```
-Mobile:                    Desktop:
-┌──────────────┐           ┌────────┬──────────────┐
-│  Top Bar     │           │        │  Top Bar     │
-├──────────────┤           │ Side   ├──────────────┤
-│              │           │  bar   │              │
-│   Content    │           │        │   Content    │
-│              │           │        │              │
-├──────────────┤           │        │              │
-│  Bottom Nav  │           └────────┴──────────────┘
-└──────────────┘
-```
-
-### Bottom nav (mobile)
-
-```tsx
-// components/layout/bottom-nav.tsx
-// 4-5 ícones máximo — os mais usados do app
-// Usar Link com active state via usePathname()
-```
+Várias rotas sob `/api/*` são alcançáveis sem sessão ao nível do middleware; **cada handler** deve aplicar `auth()`, escopo de organização quando relevante, e validação Zod. Endpoints internos sensíveis usam segredo Bearer (ex.: `api/internal/session-user`).
 
 ---
 
-## Decisões Arquiteturais
+## Testes automatizados
+
+- **Vitest:** `npm run test` — validação de schemas de domínio (ex.: alteração de senha, corpo de booking) e utilitários de redirect seguro em `auth-routes`.
+- Testes E2E (Playwright) são opcionais para evolução futura.
+
+---
+
+## Documentação de funcionalidades
+
+Índice: **[BRAIN/features/README.md](./BRAIN/features/README.md)** — inclui PWA, agendamento público, onboarding aluno, build Vercel, placeholders de produto, etc.
+
+---
+
+## Módulos e rotas (estado atual)
+
+| Área | Rotas principais | Notas |
+|------|------------------|--------|
+| Público / marketing | `/`, `/home`, `/inicio`, `/para-escolas`, `/mapa`, `/centers`, `/spots`, `/spot/[slug]` | Exploração de spots e escolas |
+| Escola pública | `/escola/[orgSlug]`, agendar, agenda, instrutor | Wizard de agendamento |
+| Auth | `/login`, `/cadastro`, `/convite/[token]` | |
+| Aluno | `/aluno/aulas`, `/aluno/conta`, `/aluno/pacotes`, `/aluno/mapa`, spots | Shell app |
+| Instrutor | `/instrutor/agenda`, `/instrutor/conta` | |
+| Prestador | `/prestador` | |
+| Admin (escola) | `/admin`, `/admin/agenda`, alunos, pacotes, spots, convites, financeiro, … | |
+| Super-admin | `/super-admin`, escolas, spots globais, utilizadores | |
+| PWA | `/offline`, `manifest.webmanifest`, `/serwist/*` | |
+
+---
+
+## Decisões arquiteturais
 
 | # | Decisão | Razão |
-|---|---------|-------|
-| D1 | App Router (Next.js 15) | Server Components, streaming, layouts nested |
-| D2 | Server Actions (não API Routes) | Menos boilerplate, type-safe, co-location |
-| D3 | Prisma sobre query builders | Type-safety + migrations automáticas |
-| D4 | shadcn/ui sobre component libs | Sem vendor lock-in, customizável, acessível |
-| D5 | Zod no domínio (não no form) | Validação reutilizável server+client |
-| D6 | IDs como Int (não UUID como PK) | Performance de joins; UUID como campo público |
-| D7 | Soft delete (`deleted_at`) | Auditoria + recuperação |
-| D8 | JSONB para settings | Flexibilidade sem migrations para configs |
-| D9 | Cliente Prisma em `src/generated` + `postinstall: prisma generate` | Client não versionado; CI/Vercel precisa gerar antes do `next build` — ver `BRAIN/features/BUILD_DEPLOY_VERCEL.md` |
-| D10 | Documentação de features em `BRAIN/features/*.md` | Padrão do projeto (INSTRUCTIONS.md); rastreabilidade por módulo |
-
-### Documentação de funcionalidades (eKite)
-
-Índice: **[BRAIN/features/README.md](./BRAIN/features/README.md)**
+|---|---------|--------|
+| D1 | App Router (Next.js 16) | RSC, layouts imbricados, streaming |
+| D2 | Server Actions + route handlers | Actions para mutações colocated; APIs para fluxos REST/mobile |
+| D3 | Prisma | Type-safety e migrações |
+| D4 | shadcn/ui | Controlo do código, acessibilidade |
+| D5 | Zod no domínio | Validação partilhada; schemas exportados de `domain/**/schema.ts` |
+| D6 | IDs `Int` | Performance; UUID como campo público quando existir |
+| D7 | Soft delete | Auditoria e recuperação |
+| D8 | JSONB para settings | Flexibilidade |
+| D9 | `postinstall: prisma generate` | Client gerado em CI/deploy — ver `BRAIN/features/BUILD_DEPLOY_VERCEL.md` |
+| D10 | Docs em `BRAIN/features/*.md` | Rastreio por feature (INSTRUCTIONS.md) |
+| D11 | Serwist para PWA | SW compatível com Turbopack; cache conservador |
+| D12 | Vitest para smoke de domínio | Regressão rápida em schemas e redirects sem custo E2E |
 
 ---
 
-## Módulos do Sistema
+## Notas de versionamento
 
-> Preencher conforme o projeto for crescendo.
+### v1.1 — 2026-04-14
 
-| Módulo | Rota | Resource | Status |
-|--------|------|----------|--------|
-| Admin — Usuários | `/admin/users` | `users` | ⬜ Planejado |
-| Admin — Clientes | `/admin/clients` | `clients` | ⬜ Planejado |
-| Dashboard | `/dashboard` | — | ⬜ Planejado |
-
----
-
-## Nota de versionamento
+- Stack e tabela de módulos alinhadas ao repositório (Next 16, Prisma 7, papéis reais).
+- Documentados PWA, Vitest, `auth-routes`, escopo de APIs públicas.
 
 ### v1.0 — Inicial (template)
-- Estrutura base definida
-- Stack escolhida
-- Padrões estabelecidos
+
+- Estrutura base e padrões iniciais do projeto.
